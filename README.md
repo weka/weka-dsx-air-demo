@@ -4,6 +4,14 @@ A practical WEKA filesystem lab with **five- and eight-backend topologies**, two
 
 ![Eight-node virtual data topology](assets/weka_8node_topology.svg)
 
+<!-- weka-five-node-air-screenshot -->
+## Five-node lab in DSX Air
+
+![Five-node WEKA lab with OOB management network](labs/5node/images/weka_5node_air_screenshot.png)
+
+DSX Air screenshot supplied by Sekhar: five WEKA backends, two clients, SN5600-1, and the OOB management switch and server.
+
+
 ## Choose a lab
 
 | Lab | Current state | Guide | Air topology |

@@ -52,6 +52,14 @@ All backend and client `eth1` interfaces connect to SN5600-1. `eth0` interfaces 
 
 ![WEKA 5-backend data topology](images/weka_5node_topology.svg)
 
+<!-- weka-five-node-air-screenshot -->
+### DSX Air topology screenshot
+
+![Five-node WEKA lab with OOB management network](images/weka_5node_air_screenshot.png)
+
+This supplied screenshot includes the OOB management switch and server as well as the five WEKA backends, two clients, and SN5600-1.
+
+
 ### Device Naming
 
 `WekaNode01` through `WekaNode05` are storage backends. `Client01` and `Client02` are filesystem consumers. `SN5600-1` is the data switch. Hostname capitalization may appear differently in terminal prompts; compare actual `hostname` output.
