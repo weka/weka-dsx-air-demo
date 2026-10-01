@@ -1,0 +1,1001 @@
+{
+    "format": "JSON",
+    "ztp": null,
+    "content": {
+        "nodes": {
+            "Client01": {
+                "cpu": 4,
+                "memory": 8192,
+                "storage": 20,
+                "positioning": {
+                    "x": 1650,
+                    "y": 275
+                },
+                "nic_model": "virtio",
+                "cpu_mode": "host-passthrough",
+                "cpu_options": [],
+                "secureboot": false,
+                "os": "generic/ubuntu2204",
+                "labels": {
+                    "group": "CLIENT",
+                    "model": "weka-client"
+                },
+                "management_interfaces": {
+                    "eth0": {
+                        "ip": "192.168.200.21",
+                        "mac_address": "48:B0:2D:30:00:A1"
+                    }
+                },
+                "oob": false,
+                "storage_pci": null,
+                "pxehost": false,
+                "boot": "hd",
+                "features": {
+                    "uefi": false
+                }
+            },
+            "Client02": {
+                "cpu": 4,
+                "memory": 8192,
+                "storage": 20,
+                "positioning": {
+                    "x": 1650,
+                    "y": 0
+                },
+                "nic_model": "virtio",
+                "cpu_mode": "host-passthrough",
+                "cpu_options": [],
+                "secureboot": false,
+                "os": "generic/ubuntu2204",
+                "labels": {
+                    "group": "CLIENT",
+                    "model": "weka-client"
+                },
+                "management_interfaces": {
+                    "eth0": {
+                        "ip": "192.168.200.22",
+                        "mac_address": "48:B0:2D:30:00:A2"
+                    }
+                },
+                "oob": false,
+                "storage_pci": null,
+                "pxehost": false,
+                "boot": "hd",
+                "features": {
+                    "uefi": false
+                }
+            },
+            "SN5600-1": {
+                "cpu": 2,
+                "memory": 4096,
+                "storage": 20,
+                "positioning": {
+                    "x": 825,
+                    "y": -275
+                },
+                "nic_model": "virtio",
+                "cpu_mode": "custom",
+                "cpu_options": [],
+                "secureboot": false,
+                "os": "cumulus-vx-5.16.1",
+                "labels": {
+                    "group": "SWITCH",
+                    "model": "SN5600"
+                },
+                "management_interfaces": {
+                    "eth0": {
+                        "ip": "192.168.200.3",
+                        "mac_address": "48:B0:2D:00:00:30"
+                    }
+                },
+                "oob": false,
+                "storage_pci": null,
+                "pxehost": false,
+                "boot": "hd",
+                "features": {
+                    "uefi": false
+                }
+            },
+            "WekaNode01": {
+                "cpu": 6,
+                "memory": 24576,
+                "storage": 32,
+                "positioning": {
+                    "x": 0,
+                    "y": 550
+                },
+                "nic_model": "virtio",
+                "cpu_mode": "host-passthrough",
+                "cpu_options": [],
+                "secureboot": false,
+                "os": "generic/ubuntu2204",
+                "labels": {
+                    "group": "SERVER",
+                    "model": "weka-backend"
+                },
+                "management_interfaces": {
+                    "eth0": {
+                        "ip": "192.168.200.11",
+                        "mac_address": "48:B0:2D:30:00:81"
+                    }
+                },
+                "oob": false,
+                "storage_pci": {
+                    "drive1": {
+                        "name": "weka01",
+                        "type": "NVME",
+                        "size": 48
+                    },
+                    "drive2": {
+                        "name": "swap01",
+                        "type": "NVME",
+                        "size": 8
+                    }
+                },
+                "pxehost": false,
+                "boot": "hd",
+                "features": {
+                    "uefi": false
+                }
+            },
+            "WekaNode02": {
+                "cpu": 6,
+                "memory": 24576,
+                "storage": 32,
+                "positioning": {
+                    "x": 275,
+                    "y": 550
+                },
+                "nic_model": "virtio",
+                "cpu_mode": "host-passthrough",
+                "cpu_options": [],
+                "secureboot": false,
+                "os": "generic/ubuntu2204",
+                "labels": {
+                    "group": "SERVER",
+                    "model": "weka-backend"
+                },
+                "management_interfaces": {
+                    "eth0": {
+                        "ip": "192.168.200.12",
+                        "mac_address": "48:B0:2D:30:00:82"
+                    }
+                },
+                "oob": false,
+                "storage_pci": {
+                    "drive1": {
+                        "name": "weka02",
+                        "type": "NVME",
+                        "size": 48
+                    },
+                    "drive2": {
+                        "name": "swap02",
+                        "type": "NVME",
+                        "size": 8
+                    }
+                },
+                "pxehost": false,
+                "boot": "hd",
+                "features": {
+                    "uefi": false
+                }
+            },
+            "WekaNode03": {
+                "cpu": 6,
+                "memory": 24576,
+                "storage": 32,
+                "positioning": {
+                    "x": 550,
+                    "y": 550
+                },
+                "nic_model": "virtio",
+                "cpu_mode": "host-passthrough",
+                "cpu_options": [],
+                "secureboot": false,
+                "os": "generic/ubuntu2204",
+                "labels": {
+                    "group": "SERVER",
+                    "model": "weka-backend"
+                },
+                "management_interfaces": {
+                    "eth0": {
+                        "ip": "192.168.200.13",
+                        "mac_address": "48:B0:2D:30:00:83"
+                    }
+                },
+                "oob": false,
+                "storage_pci": {
+                    "drive1": {
+                        "name": "weka03",
+                        "type": "NVME",
+                        "size": 48
+                    },
+                    "drive2": {
+                        "name": "swap03",
+                        "type": "NVME",
+                        "size": 8
+                    }
+                },
+                "pxehost": false,
+                "boot": "hd",
+                "features": {
+                    "uefi": false
+                }
+            },
+            "WekaNode04": {
+                "cpu": 6,
+                "memory": 24576,
+                "storage": 32,
+                "positioning": {
+                    "x": 825,
+                    "y": 550
+                },
+                "nic_model": "virtio",
+                "cpu_mode": "host-passthrough",
+                "cpu_options": [],
+                "secureboot": false,
+                "os": "generic/ubuntu2204",
+                "labels": {
+                    "group": "SERVER",
+                    "model": "weka-backend"
+                },
+                "management_interfaces": {
+                    "eth0": {
+                        "ip": "192.168.200.14",
+                        "mac_address": "48:B0:2D:30:00:84"
+                    }
+                },
+                "oob": false,
+                "storage_pci": {
+                    "drive1": {
+                        "name": "weka04",
+                        "type": "NVME",
+                        "size": 48
+                    },
+                    "drive2": {
+                        "name": "swap04",
+                        "type": "NVME",
+                        "size": 8
+                    }
+                },
+                "pxehost": false,
+                "boot": "hd",
+                "features": {
+                    "uefi": false
+                }
+            },
+            "WekaNode05": {
+                "cpu": 6,
+                "memory": 24576,
+                "storage": 32,
+                "positioning": {
+                    "x": 1100,
+                    "y": 550
+                },
+                "nic_model": "virtio",
+                "cpu_mode": "host-passthrough",
+                "cpu_options": [],
+                "secureboot": false,
+                "os": "generic/ubuntu2204",
+                "labels": {
+                    "group": "SERVER",
+                    "model": "weka-backend"
+                },
+                "management_interfaces": {
+                    "eth0": {
+                        "ip": "192.168.200.15",
+                        "mac_address": "48:B0:2D:30:00:85"
+                    }
+                },
+                "oob": false,
+                "storage_pci": {
+                    "drive1": {
+                        "name": "weka05",
+                        "type": "NVME",
+                        "size": 48
+                    },
+                    "drive2": {
+                        "name": "swap05",
+                        "type": "NVME",
+                        "size": 8
+                    }
+                },
+                "pxehost": false,
+                "boot": "hd",
+                "features": {
+                    "uefi": false
+                }
+            },
+            "WekaNode06": {
+                "cpu": 6,
+                "memory": 24576,
+                "storage": 32,
+                "positioning": {
+                    "x": 1375,
+                    "y": 550
+                },
+                "nic_model": "virtio",
+                "cpu_mode": "host-passthrough",
+                "cpu_options": [],
+                "secureboot": false,
+                "os": "generic/ubuntu2204",
+                "labels": {
+                    "group": "SERVER",
+                    "model": "weka-backend"
+                },
+                "management_interfaces": {
+                    "eth0": {
+                        "ip": "192.168.200.16",
+                        "mac_address": "48:B0:2D:30:00:86"
+                    }
+                },
+                "oob": false,
+                "storage_pci": {
+                    "drive1": {
+                        "name": "weka06",
+                        "type": "NVME",
+                        "size": 48
+                    },
+                    "drive2": {
+                        "name": "swap06",
+                        "type": "NVME",
+                        "size": 8
+                    }
+                },
+                "pxehost": false,
+                "boot": "hd",
+                "features": {
+                    "uefi": false
+                }
+            },
+            "WekaNode07": {
+                "cpu": 6,
+                "memory": 24576,
+                "storage": 32,
+                "positioning": {
+                    "x": 1650,
+                    "y": 550
+                },
+                "nic_model": "virtio",
+                "cpu_mode": "host-passthrough",
+                "cpu_options": [],
+                "secureboot": false,
+                "os": "generic/ubuntu2204",
+                "labels": {
+                    "group": "SERVER",
+                    "model": "weka-backend"
+                },
+                "management_interfaces": {
+                    "eth0": {
+                        "ip": "192.168.200.17",
+                        "mac_address": "48:B0:2D:30:00:87"
+                    }
+                },
+                "oob": false,
+                "storage_pci": {
+                    "drive1": {
+                        "name": "weka07",
+                        "type": "NVME",
+                        "size": 48
+                    },
+                    "drive2": {
+                        "name": "swap07",
+                        "type": "NVME",
+                        "size": 8
+                    }
+                },
+                "pxehost": false,
+                "boot": "hd",
+                "features": {
+                    "uefi": false
+                }
+            },
+            "WekaNode08": {
+                "cpu": 6,
+                "memory": 24576,
+                "storage": 32,
+                "positioning": {
+                    "x": 1925,
+                    "y": 550
+                },
+                "nic_model": "virtio",
+                "cpu_mode": "host-passthrough",
+                "cpu_options": [],
+                "secureboot": false,
+                "os": "generic/ubuntu2204",
+                "labels": {
+                    "group": "SERVER",
+                    "model": "weka-backend"
+                },
+                "management_interfaces": {
+                    "eth0": {
+                        "ip": "192.168.200.18",
+                        "mac_address": "48:B0:2D:30:00:88"
+                    }
+                },
+                "oob": false,
+                "storage_pci": {
+                    "drive1": {
+                        "name": "weka08",
+                        "type": "NVME",
+                        "size": 48
+                    },
+                    "drive2": {
+                        "name": "swap08",
+                        "type": "NVME",
+                        "size": 8
+                    }
+                },
+                "pxehost": false,
+                "boot": "hd",
+                "features": {
+                    "uefi": false
+                }
+            }
+        },
+        "links": [
+            [
+                {
+                    "interface": "eth1",
+                    "node": "Client01",
+                    "mac": "48:B0:2D:30:00:60"
+                },
+                {
+                    "interface": "swp5",
+                    "node": "SN5600-1",
+                    "mac": "48:B0:2D:30:00:50"
+                }
+            ],
+            [
+                {
+                    "interface": "eth1",
+                    "node": "Client02",
+                    "mac": "48:B0:2D:30:00:61"
+                },
+                {
+                    "interface": "swp6",
+                    "node": "SN5600-1",
+                    "mac": "48:B0:2D:30:00:51"
+                }
+            ],
+            [
+                {
+                    "interface": "swp1s0",
+                    "node": "SN5600-1",
+                    "mac": "48:B0:2D:30:00:20"
+                },
+                {
+                    "interface": "eth1",
+                    "node": "WekaNode01",
+                    "mac": "48:B0:2D:30:00:40"
+                }
+            ],
+            [
+                {
+                    "interface": "swp1s1",
+                    "node": "SN5600-1",
+                    "mac": "48:B0:2D:30:00:21"
+                },
+                {
+                    "interface": "eth1",
+                    "node": "WekaNode02",
+                    "mac": "48:B0:2D:30:00:41"
+                }
+            ],
+            [
+                {
+                    "interface": "swp2",
+                    "node": "SN5600-1",
+                    "mac": "48:B0:2D:30:00:22"
+                },
+                {
+                    "interface": "eth1",
+                    "node": "WekaNode03",
+                    "mac": "48:B0:2D:30:00:42"
+                }
+            ],
+            [
+                {
+                    "interface": "swp3",
+                    "node": "SN5600-1",
+                    "mac": "48:B0:2D:30:00:23"
+                },
+                {
+                    "interface": "eth1",
+                    "node": "WekaNode04",
+                    "mac": "48:B0:2D:30:00:43"
+                }
+            ],
+            [
+                {
+                    "interface": "swp4",
+                    "node": "SN5600-1",
+                    "mac": "48:B0:2D:30:00:24"
+                },
+                {
+                    "interface": "eth1",
+                    "node": "WekaNode05",
+                    "mac": "48:B0:2D:30:00:44"
+                }
+            ],
+            [
+                {
+                    "interface": "swp10",
+                    "node": "SN5600-1",
+                    "mac": "48:B0:2D:30:00:AA"
+                },
+                "unconnected"
+            ],
+            [
+                {
+                    "interface": "swp11",
+                    "node": "SN5600-1",
+                    "mac": "48:B0:2D:30:00:AB"
+                },
+                "unconnected"
+            ],
+            [
+                {
+                    "interface": "swp12",
+                    "node": "SN5600-1",
+                    "mac": "48:B0:2D:30:00:AC"
+                },
+                "unconnected"
+            ],
+            [
+                {
+                    "interface": "swp13",
+                    "node": "SN5600-1",
+                    "mac": "48:B0:2D:30:00:AD"
+                },
+                "unconnected"
+            ],
+            [
+                {
+                    "interface": "swp14",
+                    "node": "SN5600-1",
+                    "mac": "48:B0:2D:30:00:AE"
+                },
+                "unconnected"
+            ],
+            [
+                {
+                    "interface": "swp15",
+                    "node": "SN5600-1",
+                    "mac": "48:B0:2D:30:00:AF"
+                },
+                "unconnected"
+            ],
+            [
+                {
+                    "interface": "swp16",
+                    "node": "SN5600-1",
+                    "mac": "48:B0:2D:30:00:B0"
+                },
+                "unconnected"
+            ],
+            [
+                {
+                    "interface": "swp17",
+                    "node": "SN5600-1",
+                    "mac": "48:B0:2D:30:00:B1"
+                },
+                "unconnected"
+            ],
+            [
+                {
+                    "interface": "swp18",
+                    "node": "SN5600-1",
+                    "mac": "48:B0:2D:30:00:B2"
+                },
+                "unconnected"
+            ],
+            [
+                {
+                    "interface": "swp19",
+                    "node": "SN5600-1",
+                    "mac": "48:B0:2D:30:00:B3"
+                },
+                "unconnected"
+            ],
+            [
+                {
+                    "interface": "swp20",
+                    "node": "SN5600-1",
+                    "mac": "48:B0:2D:30:00:B4"
+                },
+                "unconnected"
+            ],
+            [
+                {
+                    "interface": "swp21",
+                    "node": "SN5600-1",
+                    "mac": "48:B0:2D:30:00:B5"
+                },
+                "unconnected"
+            ],
+            [
+                {
+                    "interface": "swp22",
+                    "node": "SN5600-1",
+                    "mac": "48:B0:2D:30:00:B6"
+                },
+                "unconnected"
+            ],
+            [
+                {
+                    "interface": "swp23",
+                    "node": "SN5600-1",
+                    "mac": "48:B0:2D:30:00:B7"
+                },
+                "unconnected"
+            ],
+            [
+                {
+                    "interface": "swp24",
+                    "node": "SN5600-1",
+                    "mac": "48:B0:2D:30:00:B8"
+                },
+                "unconnected"
+            ],
+            [
+                {
+                    "interface": "swp25",
+                    "node": "SN5600-1",
+                    "mac": "48:B0:2D:30:00:B9"
+                },
+                "unconnected"
+            ],
+            [
+                {
+                    "interface": "swp26",
+                    "node": "SN5600-1",
+                    "mac": "48:B0:2D:30:00:BA"
+                },
+                "unconnected"
+            ],
+            [
+                {
+                    "interface": "swp27",
+                    "node": "SN5600-1",
+                    "mac": "48:B0:2D:30:00:BB"
+                },
+                "unconnected"
+            ],
+            [
+                {
+                    "interface": "swp28",
+                    "node": "SN5600-1",
+                    "mac": "48:B0:2D:30:00:BC"
+                },
+                "unconnected"
+            ],
+            [
+                {
+                    "interface": "swp29",
+                    "node": "SN5600-1",
+                    "mac": "48:B0:2D:30:00:BD"
+                },
+                "unconnected"
+            ],
+            [
+                {
+                    "interface": "swp30",
+                    "node": "SN5600-1",
+                    "mac": "48:B0:2D:30:00:BE"
+                },
+                "unconnected"
+            ],
+            [
+                {
+                    "interface": "swp31",
+                    "node": "SN5600-1",
+                    "mac": "48:B0:2D:30:00:BF"
+                },
+                "unconnected"
+            ],
+            [
+                {
+                    "interface": "swp32",
+                    "node": "SN5600-1",
+                    "mac": "48:B0:2D:30:00:C0"
+                },
+                "unconnected"
+            ],
+            [
+                {
+                    "interface": "swp33",
+                    "node": "SN5600-1",
+                    "mac": "48:B0:2D:30:00:C1"
+                },
+                "unconnected"
+            ],
+            [
+                {
+                    "interface": "swp34",
+                    "node": "SN5600-1",
+                    "mac": "48:B0:2D:30:00:C2"
+                },
+                "unconnected"
+            ],
+            [
+                {
+                    "interface": "swp35",
+                    "node": "SN5600-1",
+                    "mac": "48:B0:2D:30:00:C3"
+                },
+                "unconnected"
+            ],
+            [
+                {
+                    "interface": "swp36",
+                    "node": "SN5600-1",
+                    "mac": "48:B0:2D:30:00:C4"
+                },
+                "unconnected"
+            ],
+            [
+                {
+                    "interface": "swp37",
+                    "node": "SN5600-1",
+                    "mac": "48:B0:2D:30:00:C5"
+                },
+                "unconnected"
+            ],
+            [
+                {
+                    "interface": "swp38",
+                    "node": "SN5600-1",
+                    "mac": "48:B0:2D:30:00:C6"
+                },
+                "unconnected"
+            ],
+            [
+                {
+                    "interface": "swp39",
+                    "node": "SN5600-1",
+                    "mac": "48:B0:2D:30:00:C7"
+                },
+                "unconnected"
+            ],
+            [
+                {
+                    "interface": "swp40",
+                    "node": "SN5600-1",
+                    "mac": "48:B0:2D:30:00:C8"
+                },
+                "unconnected"
+            ],
+            [
+                {
+                    "interface": "swp41",
+                    "node": "SN5600-1",
+                    "mac": "48:B0:2D:30:00:C9"
+                },
+                "unconnected"
+            ],
+            [
+                {
+                    "interface": "swp42",
+                    "node": "SN5600-1",
+                    "mac": "48:B0:2D:30:00:CA"
+                },
+                "unconnected"
+            ],
+            [
+                {
+                    "interface": "swp43",
+                    "node": "SN5600-1",
+                    "mac": "48:B0:2D:30:00:CB"
+                },
+                "unconnected"
+            ],
+            [
+                {
+                    "interface": "swp44",
+                    "node": "SN5600-1",
+                    "mac": "48:B0:2D:30:00:CC"
+                },
+                "unconnected"
+            ],
+            [
+                {
+                    "interface": "swp45",
+                    "node": "SN5600-1",
+                    "mac": "48:B0:2D:30:00:CD"
+                },
+                "unconnected"
+            ],
+            [
+                {
+                    "interface": "swp46",
+                    "node": "SN5600-1",
+                    "mac": "48:B0:2D:30:00:CE"
+                },
+                "unconnected"
+            ],
+            [
+                {
+                    "interface": "swp47",
+                    "node": "SN5600-1",
+                    "mac": "48:B0:2D:30:00:CF"
+                },
+                "unconnected"
+            ],
+            [
+                {
+                    "interface": "swp48",
+                    "node": "SN5600-1",
+                    "mac": "48:B0:2D:30:00:D0"
+                },
+                "unconnected"
+            ],
+            [
+                {
+                    "interface": "swp49",
+                    "node": "SN5600-1",
+                    "mac": "48:B0:2D:30:00:D1"
+                },
+                "unconnected"
+            ],
+            [
+                {
+                    "interface": "swp50",
+                    "node": "SN5600-1",
+                    "mac": "48:B0:2D:30:00:D2"
+                },
+                "unconnected"
+            ],
+            [
+                {
+                    "interface": "swp51",
+                    "node": "SN5600-1",
+                    "mac": "48:B0:2D:30:00:D3"
+                },
+                "unconnected"
+            ],
+            [
+                {
+                    "interface": "swp52",
+                    "node": "SN5600-1",
+                    "mac": "48:B0:2D:30:00:D4"
+                },
+                "unconnected"
+            ],
+            [
+                {
+                    "interface": "swp53",
+                    "node": "SN5600-1",
+                    "mac": "48:B0:2D:30:00:D5"
+                },
+                "unconnected"
+            ],
+            [
+                {
+                    "interface": "swp54",
+                    "node": "SN5600-1",
+                    "mac": "48:B0:2D:30:00:D6"
+                },
+                "unconnected"
+            ],
+            [
+                {
+                    "interface": "swp55",
+                    "node": "SN5600-1",
+                    "mac": "48:B0:2D:30:00:D7"
+                },
+                "unconnected"
+            ],
+            [
+                {
+                    "interface": "swp56",
+                    "node": "SN5600-1",
+                    "mac": "48:B0:2D:30:00:D8"
+                },
+                "unconnected"
+            ],
+            [
+                {
+                    "interface": "swp57",
+                    "node": "SN5600-1",
+                    "mac": "48:B0:2D:30:00:D9"
+                },
+                "unconnected"
+            ],
+            [
+                {
+                    "interface": "swp58",
+                    "node": "SN5600-1",
+                    "mac": "48:B0:2D:30:00:DA"
+                },
+                "unconnected"
+            ],
+            [
+                {
+                    "interface": "swp59",
+                    "node": "SN5600-1",
+                    "mac": "48:B0:2D:30:00:DB"
+                },
+                "unconnected"
+            ],
+            [
+                {
+                    "interface": "swp60",
+                    "node": "SN5600-1",
+                    "mac": "48:B0:2D:30:00:DC"
+                },
+                "unconnected"
+            ],
+            [
+                {
+                    "interface": "swp61",
+                    "node": "SN5600-1",
+                    "mac": "48:B0:2D:30:00:DD"
+                },
+                "unconnected"
+            ],
+            [
+                {
+                    "interface": "swp62",
+                    "node": "SN5600-1",
+                    "mac": "48:B0:2D:30:00:DE"
+                },
+                "unconnected"
+            ],
+            [
+                {
+                    "interface": "swp63",
+                    "node": "SN5600-1",
+                    "mac": "48:B0:2D:30:00:DF"
+                },
+                "unconnected"
+            ],
+            [
+                {
+                    "interface": "swp64",
+                    "node": "SN5600-1",
+                    "mac": "48:B0:2D:30:00:E0"
+                },
+                "unconnected"
+            ],
+            [
+                {
+                    "interface": "swp7",
+                    "node": "SN5600-1",
+                    "mac": "48:B0:2D:30:00:A7"
+                },
+                {
+                    "interface": "eth1",
+                    "node": "WekaNode06",
+                    "mac": "48:B0:2D:30:00:45"
+                }
+            ],
+            [
+                {
+                    "interface": "swp8",
+                    "node": "SN5600-1",
+                    "mac": "48:B0:2D:30:00:A8"
+                },
+                {
+                    "interface": "eth1",
+                    "node": "WekaNode07",
+                    "mac": "48:B0:2D:30:00:46"
+                }
+            ],
+            [
+                {
+                    "interface": "swp9",
+                    "node": "SN5600-1",
+                    "mac": "48:B0:2D:30:00:A9"
+                },
+                {
+                    "interface": "eth1",
+                    "node": "WekaNode08",
+                    "mac": "48:B0:2D:30:00:47"
+                }
+            ]
+        ],
+        "oob": true
+    },
+    "name": "Weka8Backend_2Client_48GBDrive_host_passthrough"
+}

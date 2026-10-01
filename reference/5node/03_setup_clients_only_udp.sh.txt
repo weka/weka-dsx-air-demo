@@ -1,0 +1,102 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# Run from WekaNode01 after the backend WEKA cluster is already OK.
+# UDP mode is required in DSX Air client topology.
+
+SSH_OPTS="-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o ConnectTimeout=10"
+CLIENTS=(Client01 Client02)
+CLIENT_IPS=(10.200.100.21 10.200.100.22)
+
+MOUNT_POINT="${MOUNT_POINT:-/mnt/weka}"
+FS_NAME="${FS_NAME:-default}"
+BACKEND_IP="${BACKEND_IP:-10.200.100.11}"
+
+for i in "${!CLIENTS[@]}"; do
+  c="${CLIENTS[$i]}"
+  ip="${CLIENT_IPS[$i]}"
+
+  echo "===== Configure and mount $c / $ip using UDP ====="
+
+  ssh $SSH_OPTS ubuntu@$c "WEKA_INSTALL_URL='${WEKA_INSTALL_URL:-}' sudo -E bash -s" <<EOS
+set -euo pipefail
+
+cat > /etc/netplan/70-weka-client-data.yaml <<NETPLAN
+network:
+  version: 2
+  renderer: networkd
+  ethernets:
+    eth1:
+      mtu: 9000
+      dhcp4: false
+      dhcp6: false
+      addresses:
+        - ${ip}/24
+NETPLAN
+
+chmod 600 /etc/netplan/70-weka-client-data.yaml
+chmod 600 /etc/netplan/40-air.yaml 2>/dev/null || true
+
+netplan generate
+netplan apply
+
+systemctl stop unattended-upgrades apt-daily.service apt-daily-upgrade.service 2>/dev/null || true
+systemctl stop apt-daily.timer apt-daily-upgrade.timer 2>/dev/null || true
+
+apt-get update -y
+apt-get install -y curl jq fio lsof
+
+if ! command -v weka >/dev/null 2>&1; then
+  if [[ -z "\${WEKA_INSTALL_URL:-}" ]]; then
+    echo "ERROR: WEKA not installed and WEKA_INSTALL_URL is not set."
+    exit 1
+  fi
+  curl -fsSL "\$WEKA_INSTALL_URL" | sh
+fi
+
+echo "===== Network check ====="
+ip -br a | egrep "eth0|eth1" || true
+ping -c 2 ${BACKEND_IP}
+nc -vz ${BACKEND_IP} 14000
+
+echo "===== Clean old client state ====="
+umount "${MOUNT_POINT}" 2>/dev/null || true
+weka local stop client 2>/dev/null || true
+weka local rm client 2>/dev/null || true
+sleep 5
+
+mkdir -p "${MOUNT_POINT}"
+
+echo "===== Mount WEKA using UDP mode ====="
+mount -t wekafs \
+  -o net=udp,num_cores=0,mgmt_ip=${ip} \
+  ${BACKEND_IP}/${FS_NAME} \
+  "${MOUNT_POINT}"
+
+chmod 777 "${MOUNT_POINT}"
+
+echo "===== Mount verification ====="
+df -h "${MOUNT_POINT}"
+mount | grep wekafs || true
+weka local ps || true
+EOS
+
+done
+
+for c in "${CLIENTS[@]}"; do
+  echo "===== fio smoke test from $c ====="
+  ssh $SSH_OPTS ubuntu@$c "
+    fio --name=weka-client-write-${c} \
+      --directory=${MOUNT_POINT} \
+      --rw=write \
+      --bs=1M \
+      --size=2G \
+      --numjobs=2 \
+      --iodepth=8 \
+      --ioengine=libaio \
+      --direct=1 \
+      --runtime=30 \
+      --time_based \
+      --group_reporting
+  "
+done

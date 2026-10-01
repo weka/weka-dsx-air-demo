@@ -1,0 +1,12 @@
+# Local results and credentials
+.DS_Store
+__pycache__/
+*.pyc
+.env
+.env.*
+*.pem
+*.key
+*.tar.gz
+*.b64
+logs/
+results/

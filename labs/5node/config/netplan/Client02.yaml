@@ -1,0 +1,10 @@
+network:
+  version: 2
+  renderer: networkd
+  ethernets:
+    eth1:
+      mtu: 9000
+      dhcp4: false
+      dhcp6: false
+      addresses:
+        - 10.200.100.22/24

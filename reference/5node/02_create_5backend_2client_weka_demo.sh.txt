@@ -1,0 +1,137 @@
+et -euo pipefail
+# Full build helper. Run from WekaNode01 after switch config and passwordless SSH.
+# If you already have backend cluster OK, use 03_setup_clients_only.sh instead.
+
+SSH_OPTS="-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o ConnectTimeout=10"
+BACKENDS=(WekaNode01 WekaNode02 WekaNode03 WekaNode04 WekaNode05)
+BACKEND_IPS=(10.200.100.11 10.200.100.12 10.200.100.13 10.200.100.14 10.200.100.15)
+FDS=(fd1 fd2 fd3 fd4 fd5)
+MEMS=(4GiB 2GiB 3GiB 3GiB 3GiB)
+CLIENTS=(Client01 Client02)
+CLIENT_IPS=(10.200.100.21 10.200.100.22)
+
+CLUSTER_NAME="${CLUSTER_NAME:-WekaDSXAirDemo}"
+FS_NAME="${FS_NAME:-default}"
+FS_GROUP="${FS_GROUP:-group1}"
+FS_SIZE="${FS_SIZE:-20GiB}"
+MOUNT_POINT="${MOUNT_POINT:-/mnt/weka}"
+
+configure_eth1() {
+          local node="$1"; local ip="$2"
+            ssh $SSH_OPTS ubuntu@$node "sudo bash -s" <<EOS
+cat > /etc/netplan/70-weka-data.yaml <<NETPLAN
+network:
+  version: 2
+  renderer: networkd
+  ethernets:
+    eth1:
+      mtu: 9000
+      dhcp4: false
+      dhcp6: false
+      addresses:
+        - ${ip}/24
+NETPLAN
+chmod 600 /etc/netplan/70-weka-data.yaml
+chmod 600 /etc/netplan/40-air.yaml 2>/dev/null || true
+netplan generate
+netplan apply
+ip -br addr show eth1
+EOS
+}
+
+install_weka() {
+          local node="$1"
+            ssh $SSH_OPTS ubuntu@$node "WEKA_INSTALL_URL='${WEKA_INSTALL_URL:-}' sudo -E bash -s" <<'EOS'
+set -euo pipefail
+systemctl stop unattended-upgrades apt-daily.service apt-daily-upgrade.service 2>/dev/null || true
+systemctl stop apt-daily.timer apt-daily-upgrade.timer 2>/dev/null || true
+apt-get update -y
+apt-get install -y curl jq nvme-cli fio lsof
+if ! command -v weka >/dev/null 2>&1; then
+  if [[ -z "${WEKA_INSTALL_URL:-}" ]]; then
+    echo "ERROR: WEKA not installed and WEKA_INSTALL_URL not set."
+    exit 1
+  fi
+  curl -fsSL "$WEKA_INSTALL_URL" | sh
+fi
+weka version
+EOS
+}
+
+echo "=== Configure eth1 on backends and clients ==="
+for i in "${!BACKENDS[@]}"; do configure_eth1 "${BACKENDS[$i]}" "${BACKEND_IPS[$i]}"; done
+for i in "${!CLIENTS[@]}"; do configure_eth1 "${CLIENTS[$i]}" "${CLIENT_IPS[$i]}"; done
+
+echo "=== Validate data network ==="
+for ip in 10.200.100.12 10.200.100.13 10.200.100.14 10.200.100.15 10.200.100.21 10.200.100.22; do ping -c 2 "$ip"; done
+
+echo "=== Install/check WEKA ==="
+for n in "${BACKENDS[@]}" "${CLIENTS[@]}"; do echo "===== $n ====="; install_weka "$n"; done
+
+echo "=== Configure backend swap + WEKA drive ==="
+for n in "${BACKENDS[@]}"; do
+          echo "===== $n ====="
+            ssh $SSH_OPTS ubuntu@$n "sudo bash -s" <<'EOS'
+set -euo pipefail
+SWAP_DEV="/dev/$(lsblk -dn -b -o NAME,SIZE,TYPE | awk '$3=="disk" && $1 ~ /^nvme/ {print $1,$2}' | sort -k2,2n | head -1 | awk '{print $1}')"
+WEKA_DEV="/dev/$(lsblk -dn -b -o NAME,SIZE,TYPE | awk '$3=="disk" && $1 ~ /^nvme/ {print $1,$2}' | sort -k2,2nr | head -1 | awk '{print $1}')"
+echo "swap=$SWAP_DEV weka=$WEKA_DEV"
+swapoff "$SWAP_DEV" 2>/dev/null || true
+wipefs -a "$SWAP_DEV"
+mkswap "$SWAP_DEV"
+swapon "$SWAP_DEV"
+echo "$WEKA_DEV" > /tmp/weka_drive_path
+free -h
+EOS
+done
+
+echo "=== Clean backend containers ==="
+for n in "${BACKENDS[@]}"; do ssh $SSH_OPTS ubuntu@$n 'sudo weka local stop -f || true; sudo weka local rm --all --force || true; sleep 10; weka local ps || true'; done
+
+echo "=== Create backend containers ==="
+for i in "${!BACKENDS[@]}"; do
+          node="${BACKENDS[$i]}"; ip="${BACKEND_IPS[$i]}"; fd="${FDS[$i]}"; mem="${MEMS[$i]}"
+            echo "===== $node $ip $mem ====="
+              if [[ "$node" == "WekaNode01" ]]; then
+                          ssh $SSH_OPTS ubuntu@$node "sudo weka local setup container --name default --base-port 14000 --memory $mem --failure-domain $fd --management-ips $ip --drives-dedicated-cores 1 --frontend-dedicated-cores 1 --compute-dedicated-cores 1 --cores 3 --core-ids 1,2,3"
+                            else
+                                        ssh $SSH_OPTS ubuntu@$node "sudo weka local setup container --name default --base-port 14000 --memory $mem --failure-domain $fd --management-ips $ip --no-frontends --drives-dedicated-cores 1 --compute-dedicated-cores 1 --cores 2 --core-ids 1,2"
+                                          fi
+                                  done
+
+                                  sleep 60
+                                  for n in "${BACKENDS[@]}"; do echo "===== $n ====="; ssh $SSH_OPTS ubuntu@$n 'weka local ps; ss -lntp | egrep "14000|14100" || true; free -h'; done
+
+                                  echo "=== Create cluster ==="
+                                  sudo weka cluster create host0 host1 host2 host3 host4 --host-ips=10.200.100.11:14000,10.200.100.12:14000,10.200.100.13:14000,10.200.100.14:14000,10.200.100.15:14000
+                                  sudo weka cluster update --cluster-name "$CLUSTER_NAME"
+                                  sleep 30
+                                  weka status
+                                  weka cluster container
+
+                                  echo "=== Add drives ==="
+                                  IDS=(0 1 2 3 4)
+                                  for i in "${!BACKENDS[@]}"; do
+                                            drive="$(ssh $SSH_OPTS ubuntu@${BACKENDS[$i]} 'cat /tmp/weka_drive_path')"
+                                              sudo weka cluster drive add "${IDS[$i]}" "$drive"
+                                      done
+
+                                      echo "=== Start IO ==="
+                                      sudo weka cluster update --data-drives=3 --parity-drives=2
+                                      sleep 20
+                                      sudo weka cluster start-io
+                                      weka status
+                                      weka cluster drive
+
+                                      echo "=== Create FS and mount on WekaNode01 ==="
+                                      sudo weka fs group create "$FS_GROUP" || true
+                                      sudo weka fs create "$FS_NAME" "$FS_GROUP" "$FS_SIZE" || true
+                                      sudo mkdir -p "$MOUNT_POINT"
+                                      sudo mount -t wekafs "$FS_NAME" "$MOUNT_POINT" || sudo mount -t wekafs "10.200.100.11/$FS_NAME" "$MOUNT_POINT"
+                                      sudo chmod 777 "$MOUNT_POINT"
+                                      df -h "$MOUNT_POINT"
+                                      weka fs
+
+                                      echo "=== Mount and fio from clients ==="
+                                      bash ./03_setup_clients_only_udp.sh
+

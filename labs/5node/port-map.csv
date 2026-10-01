@@ -1,0 +1,8 @@
+host,host_interface,switch,switch_interface
+Client01,eth1,SN5600-1,swp5
+Client02,eth1,SN5600-1,swp6
+WekaNode01,eth1,SN5600-1,swp1s0
+WekaNode02,eth1,SN5600-1,swp1s1
+WekaNode03,eth1,SN5600-1,swp2
+WekaNode04,eth1,SN5600-1,swp3
+WekaNode05,eth1,SN5600-1,swp4
