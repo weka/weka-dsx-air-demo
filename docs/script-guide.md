@@ -1,6 +1,6 @@
 # Numbered script guide
 
-Run scripts from the repository root on WekaNode01 or the Air OOB server, with Python 3 and OpenSSH installed. Choose one inventory with `--lab 5node` or `--lab 8node`.
+Run scripts from the repository root on WekaNode01 or the Air OOB server, with Python 3 and OpenSSH installed. The standard eight-node inventory is selected by default; explicit `--lab 8node` remains supported.
 
 | Script | Default behavior | Changes made |
 | --- | --- | --- |
@@ -9,7 +9,7 @@ Run scripts from the repository root on WekaNode01 or the Air OOB server, with P
 | 2_validate_lab.sh | Collects backend and client health/mount output | None |
 | 3_fio_smoke_test.sh | Shows the test commands | With `--run`, creates test files on client WEKA mounts |
 
-These are functional helpers, not a WEKA software installer. WEKA provisioning is a separate reviewed task. The original five-node rebuild is under reference/5node as text. Eight-node cluster commissioning completed using the new build and its continuation; see the validation record.
+These are functional helpers, not a WEKA software installer. WEKA provisioning is a separate reviewed task. Eight-node cluster commissioning completed using the new build and its continuation; see the validation record.
 
 ## Authentication
 

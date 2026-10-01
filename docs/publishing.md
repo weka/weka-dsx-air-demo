@@ -1,29 +1,24 @@
-# Update the existing GitHub repository
+# Publishing the standard eight-node lab
 
-The existing repository is `sekharg-weka/weka-dsx-air-demo`. The Mac checkout is `~/Downloads/weka-dsx-air-demo`; `gh` is authenticated as `sekharg-weka`. The five-node screenshot was pushed in commit f258af1. This update prepares the validated eight-node guide, supplied topology screenshot, corrected build/continuation scripts, inventory, and validation notes. It does not create a second repository or change visibility.
+Repository: `sekharg-weka/weka-dsx-air-demo`. The standard topology is eight backends, two clients, and one virtual Cumulus switch. The local Mac checkout is `~/Downloads/weka-dsx-air-demo`.
 
-After downloading WEKA_8Node_Repo_Update.zip, use the Mac Terminal:
+After applying the prepared standard-topology update, validate and publish from the repository root:
 
 ```bash
-cd ~/Downloads
-unzip -o WEKA_8Node_Repo_Update.zip
-cd ~/Downloads/weka-dsx-air-demo
-git pull --ff-only
-python3 ../weka-8node-repo-update/apply_update.py .
 python3 scripts/check_repository.py
 git diff --stat
-git add README.md docs/publishing.md docs/script-guide.md docs/validation-record.md labs/8node
-git commit -m "Document validated eight-node WEKA DSX Air lab"
+git add -A
+git commit -m "Standardize WEKA DSX Air demo on eight backends"
 git push origin main
 ```
 
-The updater checks the origin repository and refuses to overwrite uncommitted changes in its target files. It backs up replaced files outside the checkout, then copies only its declared payload. Review the changes before committing. If pull or the updater fails, stop and resolve that reported condition rather than forcing it.
+The update utility requires a clean checkout, checks the origin repository, and backs up replaced and removed files outside the checkout. It does not change visibility or create another repository.
 
-Repository-local author identity supplied by the owner:
+Repository-local author identity:
 
 ```bash
 git config user.name "Chandra Sekhar Gonuguntla"
 git config user.email "chandrasekhar.gonuguntla@weka.io"
 ```
 
-GitHub publication is separate from an NVIDIA-hosted catalog submission. No WEKA installer credential, license, private key, or VM image is part of this update. No new license terms are assigned.
+GitHub publication is separate from an NVIDIA-hosted lab catalog submission. No installer credentials, licenses, private keys, or VM images are included. No new license terms are assigned.

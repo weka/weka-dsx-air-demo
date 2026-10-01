@@ -21,6 +21,6 @@ fi
 git var GIT_AUTHOR_IDENT >/dev/null
 git init -b main
 git add .
-git commit -m "Add WEKA five-node reference and eight-node Air lab package"
-gh repo create "$owner/weka-dsx-air-demo" --private --source=. --remote=origin --push --description "WEKA five- and eight-backend labs for NVIDIA DSX Air"
+git commit -m "Add standard eight-backend WEKA DSX Air lab"
+gh repo create "$owner/weka-dsx-air-demo" --private --source=. --remote=origin --push --description "Standard eight-backend WEKA lab for NVIDIA DSX Air"
 gh repo view "$owner/weka-dsx-air-demo" --json url --jq .url

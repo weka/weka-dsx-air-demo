@@ -30,7 +30,7 @@ def load(lab):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('action', choices=['preflight', 'network', 'validate', 'fio'])
-    parser.add_argument('--lab', choices=['5node', '8node'], required=True)
+    parser.add_argument('--lab', choices=['8node'], default='8node')
     parser.add_argument('--apply', action='store_true', help='Apply network fragments; requires sudo -n')
     parser.add_argument('--run', action='store_true', help='Run fio on mounted client filesystems')
     args = parser.parse_args()

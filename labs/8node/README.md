@@ -8,7 +8,7 @@ WEKA provides a shared filesystem backed by distributed storage. This lab uses e
 
 The main flow demonstrates the running lab. Start from a saved configured simulation. Importing [topology.json](topology.json) creates the VMs and disks only; it does not install WEKA or restore cluster state. Fresh-build instructions are provided separately.
 
-**Important:** This functional demo uses UDP and emulated NVMe. It does not measure physical switch, NVMe, or RDMA performance. The validated clients have 8 GiB RAM and low available-memory alerts. Current mounts do not persist after reboot. Preserve the working five-node simulation as a separate reference.
+**Important:** This functional demo uses UDP and emulated NVMe. It does not measure physical switch, NVMe, or RDMA performance. The validated clients have 8 GiB RAM and low available-memory alerts. Current mounts do not persist after reboot.
 
 ## Table of Contents
 
@@ -239,7 +239,7 @@ Preserve the configured simulation using the Air organization's available save/c
 
 ## Fresh Build
 
-Use this section only for a newly imported, unused eight-backend topology. Do not run fresh-build scripts against the working five-node or initialized eight-node cluster.
+Use this section only for a newly imported, unused eight-backend topology. Do not run fresh-build scripts against an initialized eight-node cluster.
 
 The [build script](scripts/02_create_8backend_2client_weka_demo.sh) initializes swap, removes initial STEM containers, creates UDP backends, forms the cluster, discovers container IDs, adds verified disks, starts I/O with 5+2 protection and one hot spare, creates the filesystem, and mounts/tests both clients. It does not install WEKA or configure the switch/host networking. It contains fixes for the empty-host guard and WEKA CSV headers encountered during commissioning. The corrected complete build has not been rerun in one pass on a second fresh simulation.
 
@@ -342,7 +342,7 @@ The corrected build accepts an empty initial host, skips absent-container remova
 
 ### Upgrade
 
-The five-node reference was validated on 5.1.0.605; this eight-node lab uses 5.1.34. Plan upgrades separately with compatibility/license checks. Upgrade, failure/rebuild, reboot, and checkpoint recovery tests were not performed in this record.
+This eight-node lab uses validated WEKA 5.1.34. Plan upgrades separately with compatibility/license checks. Upgrade, failure/rebuild, reboot, and checkpoint recovery tests were not performed in this record.
 
 ## References
 

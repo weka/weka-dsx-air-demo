@@ -63,7 +63,7 @@ def check(count):
     print(f'{count}node: node, IP/MAC, links, port map, inventory and network fragments OK')
 
 def main():
-    for n in (5, 8):
+    for n in (8,):
         check(n)
     for md in ROOT.rglob('*.md'):
         for target in re.findall(r'!?\[[^\]]*\]\(([^)]+)\)', md.read_text()):
