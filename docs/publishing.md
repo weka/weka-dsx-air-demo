@@ -1,18 +1,29 @@
-# Publish from a Mac
+# Update the existing GitHub repository
 
-Proposed repository name: `weka-dsx-air-demo`. This package has not yet been published to GitHub.
+The existing repository is `sekharg-weka/weka-dsx-air-demo`. The Mac checkout is `~/Downloads/weka-dsx-air-demo`; `gh` is authenticated as `sekharg-weka`. The five-node screenshot was pushed in commit f258af1. This update prepares the validated eight-node guide, supplied topology screenshot, corrected build/continuation scripts, inventory, and validation notes. It does not create a second repository or change visibility.
 
-1. Extract the repository ZIP into Downloads.
-2. Install the GitHub CLI if needed and authenticate through its normal browser login. Never paste tokens into scripts or chat.
-3. From the extracted `weka-dsx-air-demo` folder, run:
+After downloading WEKA_8Node_Repo_Update.zip, use the Mac Terminal:
 
 ```bash
+cd ~/Downloads
+unzip -o WEKA_8Node_Repo_Update.zip
+cd ~/Downloads/weka-dsx-air-demo
+git pull --ff-only
+python3 ../weka-8node-repo-update/apply_update.py .
 python3 scripts/check_repository.py
-bash scripts/publish_github.sh YOUR_GITHUB_OWNER
+git diff --stat
+git add README.md docs/publishing.md docs/script-guide.md docs/validation-record.md labs/8node
+git commit -m "Document validated eight-node WEKA DSX Air lab"
+git push origin main
 ```
 
-Replace YOUR_GITHUB_OWNER with the account or organization that should own the new repository. The script creates a **private** repository, checks for an existing repo before proceeding, and pushes the initial commit. It does not overwrite an existing repository. Change visibility through GitHub only when ready to share publicly.
+The updater checks the origin repository and refuses to overwrite uncommitted changes in its target files. It backs up replaced files outside the checkout, then copies only its declared payload. Review the changes before committing. If pull or the updater fails, stop and resolve that reported condition rather than forcing it.
 
-If you prefer browser upload, create an empty private repository named `weka-dsx-air-demo`, then upload the contents of this directory. GitHub CLI upload is better for preserving executable flags and the directory tree.
+Repository-local author identity supplied by the owner:
 
-No license was assigned automatically. Confirm the intended license and ownership before making the repository public. WEKA binaries, licenses, private keys, and VM archives are excluded.
+```bash
+git config user.name "Chandra Sekhar Gonuguntla"
+git config user.email "chandrasekhar.gonuguntla@weka.io"
+```
+
+GitHub publication is separate from an NVIDIA-hosted catalog submission. No WEKA installer credential, license, private key, or VM image is part of this update. No new license terms are assigned.

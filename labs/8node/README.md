@@ -2,13 +2,13 @@
 
 # WEKA 8-Backend, 2-Client Lab in NVIDIA DSX Air
 
-WEKA provides a shared filesystem that clients access through a distributed storage cluster. This lab lets a platform or storage engineer inspect backend health, verify client mounts, and demonstrate file sharing and basic I/O over a virtual Ethernet network.
+WEKA provides a shared filesystem backed by distributed storage. This lab uses eight Ubuntu backend VMs, two Ubuntu clients, and one virtual Cumulus switch. You will inspect cluster health and protection, verify the network and mounts, and demonstrate shared-file access and basic I/O.
 
-This guide is a deployment and validation template for a new lab. Importing the JSON creates the virtual topology only. WEKA installation, switch configuration, data IP configuration, and cluster initialization must be completed before the demonstration steps. Do not present this lab as preconfigured.
+**Validated October 1, 2026:** WEKA 5.1.34 reports eight backend containers and eight drives UP, 5+2 fully protected, one hot spare, I/O STARTED, and two connected clients. Both clients completed write smoke tests without errors.
 
-**Status as of October 1, 2026:** Prepared topology; commissioning pending. JSON structure, node references, and unique IP/MAC/interface assignments were checked locally. The lab has not booted or been validated in Air because of the organization memory quota.
+The main flow demonstrates the running lab. Start from a saved configured simulation. Importing [topology.json](topology.json) creates the VMs and disks only; it does not install WEKA or restore cluster state. Fresh-build instructions are provided separately.
 
-**Important:** This is a functional virtual lab using UDP and emulated NVMe devices. Its fio results describe this simulation only; they are not production performance measurements or a hardware/RDMA validation. Preserve the working five-node reference before any rebuild.
+**Important:** This functional demo uses UDP and emulated NVMe. It does not measure physical switch, NVMe, or RDMA performance. The validated clients have 8 GiB RAM and low available-memory alerts. Current mounts do not persist after reboot. Preserve the working five-node simulation as a separate reference.
 
 ## Table of Contents
 
@@ -19,6 +19,7 @@ This guide is a deployment and validation template for a new lab. Importing the 
 - [Demo Topology Information](#demo-topology-information)
 - [Demo Environment Access](#demo-environment-access)
 - [Lab Flow](#lab-flow)
+- [Fresh Build](#fresh-build)
 - [Validation Summary](#validation-summary)
 - [Troubleshooting, Upgrade, or Reset](#troubleshooting-upgrade-or-reset)
 - [References](#references)
@@ -26,46 +27,46 @@ This guide is a deployment and validation template for a new lab. Importing the 
 
 ## Lab Story and Scenario
 
-You are a platform engineer checking whether two application hosts can use the same WEKA filesystem. First establish that management access and the data network work. Then inspect the storage cluster and client mounts, write a small file from Client01, read it from Client02, and run a short fio workload. Successful shared-file access and healthy cluster state establish the functional result.
+You are a platform engineer checking shared storage before application teams use it. Inspect the network path, backend health, drives, protection, and client mounts. Then write a small file through one client and read it through the other. A short write workload completes the functional demonstration.
 
 ## Features and Services
 
-- 8 Ubuntu WEKA backend VMs, each with a 48 GB emulated NVMe data disk and an 8 GB emulated NVMe swap disk.
-- Two Ubuntu clients using the native WEKA filesystem mount at `/mnt/weka`.
-- One virtual Cumulus switch labeled SN5600, with one data link per server/client.
-- Air OOB management for consoles and jump-server access.
-- Reference WEKA version: 5.1.0.605; dedicated deployment and UDP networking.
+- Eight WEKA 5.1.34 backends, each with a 48 GB emulated NVMe data disk and a separate 8 GB swap disk.
+- Two native WEKA filesystem clients using kernel UDP networking.
+- Cumulus Linux 5.16.1 on `SN5600-1`, access VLAN 100, and MTU 9000 on data ports.
+- Dedicated deployment, eight failure domains, 5+2 protection, and one hot spare.
+- Filesystem `default`, group `group1`, 80 GiB, mounted on both clients at `/mnt/weka`.
+- Separate Air OOB management with a management server and switch.
 
 ## What You Will Do in This Lab
 
-- Identify node roles, management addresses, and data connections.
-- Check network reachability and jumbo-frame paths.
-- Verify backend containers, drives, I/O, protection, and clients.
-- Demonstrate cross-client file access and run a short functional fio test.
-- Capture evidence and preserve a checkpoint for later use.
+- Identify node roles, addresses, and data-port connections.
+- Check jumbo-frame reachability, backend health, protection, and capacity.
+- Verify mounts, demonstrate shared-file access, and run separate write smoke tests.
+- Record alerts and preserve the configured simulation.
 
 <!-- AIR:page -->
 
 ## Demo Topology Overview
 
-All backend and client `eth1` interfaces connect to SN5600-1. `eth0` interfaces use the separate Air OOB management network. The Air-managed `oob-mgmt-server` is additional infrastructure; it is not included in the explicit 11-node JSON count.
+Each backend and client uses `eth0` for management and `eth1` for WEKA data traffic. All ten data interfaces connect to `SN5600-1`. Untagged host traffic is carried in switch access VLAN 100; hosts do not use VLAN subinterfaces. Air provides the OOB management server and switch in addition to the explicit topology nodes.
 
-![WEKA 8-backend data topology](images/weka_8node_topology.svg)
+![Eight WEKA backends, two clients, SN5600-1, and Air OOB management](images/weka_8node_air_topology.jpg)
 
 ### Device Naming
 
-`WekaNode01` through `WekaNode08` are storage backends. `Client01` and `Client02` are filesystem consumers. `SN5600-1` is the data switch. Hostname capitalization may appear differently in terminal prompts; compare actual `hostname` output.
+`WekaNode01`–`WekaNode08` are storage backends. `Client01` and `Client02` consume the filesystem. `SN5600-1` is the data switch. `oob-mgmt-server` and `oob-mgmt-switch-leaf-1` provide management access.
 
 ### Devices
 
-| Role | Device names | Image/settings from JSON |
+| Role | Names | Resources in the validated topology |
 | --- | --- | --- |
-| Backend | WekaNode01–WekaNode08 | generic/ubuntu2204; 6 vCPU; 24 GiB RAM; 32 GB boot disk; host-passthrough CPU |
-| Client | Client01, Client02 | generic/ubuntu2204; 4 vCPU; 8 GiB RAM; 20 GB boot disk; host-passthrough CPU |
-| Data switch | SN5600-1 | cumulus-vx-5.16.1; 2 vCPU; 4 GiB RAM; 20 GB boot disk |
-| Management | oob-mgmt-server | Air-managed; address and resources not supplied in JSON |
+| Backend | WekaNode01–08 | 6 vCPU, 24 GiB RAM, 32 GB boot disk, 48 GB data NVMe, 8 GB swap NVMe |
+| Client | Client01, Client02 | 4 vCPU, 8 GiB RAM, 20 GB boot disk |
+| Data switch | SN5600-1 | 2 vCPU, 4 GiB RAM, Cumulus VX 5.16.1 |
+| Management | oob-mgmt-server, oob-mgmt-switch-leaf-1 | Air-provided infrastructure |
 
-The switch image above is the uploaded topology image, not an observed running switch version. Verify it in the simulation. A virtual switch labeled SN5600 does not emulate physical ASIC performance.
+Ubuntu image: `generic/ubuntu2204`; backend/client CPU mode: host-passthrough. The explicit topology allocates 58 vCPU and 212 GiB RAM; Air reported approximately 218 GiB including overhead. The organization quota was increased and deployment completed. Increasing both clients to 16 GiB is recommended for this demo's headroom, but has not been applied; it would add 16 GiB to the total.
 
 <!-- AIR:page -->
 
@@ -73,321 +74,289 @@ The switch image above is the uploaded topology image, not an observed running s
 
 ### IPAM
 
-| Hostname | Interface | IP address | Evidence/status |
-| --- | --- | --- | --- |
-| Client01 | eth0 | 192.168.200.21/24 | JSON management assignment |
-| Client01 | eth1 | 10.200.100.21/24 | Planned; configure after boot |
-| Client02 | eth0 | 192.168.200.22/24 | JSON management assignment |
-| Client02 | eth1 | 10.200.100.22/24 | Planned; configure after boot |
-| SN5600-1 | eth0 | 192.168.200.3/24 | JSON management assignment |
-| WekaNode01 | eth0 | 192.168.200.11/24 | JSON management assignment |
-| WekaNode01 | eth1 | 10.200.100.11/24 | Planned; configure after boot |
-| WekaNode02 | eth0 | 192.168.200.12/24 | JSON management assignment |
-| WekaNode02 | eth1 | 10.200.100.12/24 | Planned; configure after boot |
-| WekaNode03 | eth0 | 192.168.200.13/24 | JSON management assignment |
-| WekaNode03 | eth1 | 10.200.100.13/24 | Planned; configure after boot |
-| WekaNode04 | eth0 | 192.168.200.14/24 | JSON management assignment |
-| WekaNode04 | eth1 | 10.200.100.14/24 | Planned; configure after boot |
-| WekaNode05 | eth0 | 192.168.200.15/24 | JSON management assignment |
-| WekaNode05 | eth1 | 10.200.100.15/24 | Planned; configure after boot |
-| WekaNode06 | eth0 | 192.168.200.16/24 | JSON management assignment |
-| WekaNode06 | eth1 | 10.200.100.16/24 | Planned; configure after boot |
-| WekaNode07 | eth0 | 192.168.200.17/24 | JSON management assignment |
-| WekaNode07 | eth1 | 10.200.100.17/24 | Planned; configure after boot |
-| WekaNode08 | eth0 | 192.168.200.18/24 | JSON management assignment |
-| WekaNode08 | eth1 | 10.200.100.18/24 | Planned; configure after boot |
+| Host | Management eth0 /24 | Data eth1 /24 | Data VLAN | Data MTU |
+| --- | --- | --- | --- | --- |
+| WekaNode01 | 192.168.200.11 | 10.200.100.11 | 100, untagged | 9000 |
+| WekaNode02 | 192.168.200.12 | 10.200.100.12 | 100, untagged | 9000 |
+| WekaNode03 | 192.168.200.13 | 10.200.100.13 | 100, untagged | 9000 |
+| WekaNode04 | 192.168.200.14 | 10.200.100.14 | 100, untagged | 9000 |
+| WekaNode05 | 192.168.200.15 | 10.200.100.15 | 100, untagged | 9000 |
+| WekaNode06 | 192.168.200.16 | 10.200.100.16 | 100, untagged | 9000 |
+| WekaNode07 | 192.168.200.17 | 10.200.100.17 | 100, untagged | 9000 |
+| WekaNode08 | 192.168.200.18 | 10.200.100.18 | 100, untagged | 9000 |
+| Client01 | 192.168.200.21 | 10.200.100.21 | 100, untagged | 9000 |
+| Client02 | 192.168.200.22 | 10.200.100.22 | 100, untagged | 9000 |
+| SN5600-1 | 192.168.200.3 | No data IP needed | br_default, VLAN 100 | Data ports 9000 |
 
-Management and data interfaces are separate networks. Linux server VRFs are not explicitly configured by this JSON. The switch VLAN ID, bridge name, and VRF must be verified from the running switch; they were not supplied in the reference output. Do not assume a VLAN ID.
+The switch management interface uses its management VRF. Hosts use ordinary Linux routing without separate VRFs. Node01's observed management gateway is `192.168.200.254`. No data gateway is needed for traffic within this subnet.
 
 ### Physical Connectivity
 
-These are virtual data links copied from the topology JSON.
+These are virtual links; [port-map.csv](port-map.csv) contains the same mapping.
 
-| Hostname | Local port | Remote port | Remote device |
+| Host | Host port | SN5600-1 port |
+| --- | --- | --- |
+| WekaNode01 | eth1 | swp1s0 |
+| WekaNode02 | eth1 | swp1s1 |
+| WekaNode03 | eth1 | swp2 |
+| WekaNode04 | eth1 | swp3 |
+| WekaNode05 | eth1 | swp4 |
+| Client01 | eth1 | swp5 |
+| Client02 | eth1 | swp6 |
+| WekaNode06 | eth1 | swp7 |
+| WekaNode07 | eth1 | swp8 |
+| WekaNode08 | eth1 | swp9 |
+
+### Backend Disks
+
+| Device | Observed size | Serial pattern | Purpose |
 | --- | --- | --- | --- |
-| Client01 | eth1 | swp5 | SN5600-1 |
-| Client02 | eth1 | swp6 | SN5600-1 |
-| WekaNode01 | eth1 | swp1s0 | SN5600-1 |
-| WekaNode02 | eth1 | swp1s1 | SN5600-1 |
-| WekaNode03 | eth1 | swp2 | SN5600-1 |
-| WekaNode04 | eth1 | swp3 | SN5600-1 |
-| WekaNode05 | eth1 | swp4 | SN5600-1 |
-| WekaNode06 | eth1 | swp7 | SN5600-1 |
-| WekaNode07 | eth1 | swp8 | SN5600-1 |
-| WekaNode08 | eth1 | swp9 | SN5600-1 |
+| /dev/vda | 29.8 GiB | Not used for WEKA identification | Ubuntu boot/root |
+| /dev/vdb | 350 KiB | Air ISO | Air initialization data |
+| /dev/nvme0n1 | 44.70 GiB | weka01–weka08 | WEKA data |
+| /dev/nvme1n1 | 7.5 GiB | swap01–swap08 | Linux swap |
 
-Existing breakout-style interface names `swp1s0` and `swp1s1` are preserved. Eight-node additions use swp7–9. Any switch configuration for the new lab must include those ports.
+Topology capacities are expressed in GB; Linux reports GiB. Check disk serials, signatures, and mountpoints before initialization. Do not choose disks only by name or size.
 
-### Resource Requirements
-
-| Resource | Explicit JSON allocation |
-| --- | ---: |
-| vCPUs | 58 |
-| RAM | 212 GiB |
-| Virtual disks, including boot/data/swap | 764 GB |
-
-Air adds management infrastructure and overhead. The boot error reported 223,232 MiB (218 GiB) required. The organization limit was 307,200 MiB (300 GiB). A later dashboard showed 146 GB used and 154 GB available, leaving an approximate 64 GB shortfall. These are captured values; refresh current usage before launch. Keeping both labs running may require a larger quota.
+<!-- AIR:page -->
 
 ## Demo Environment Access
 
 ### Load Time and Readiness
 
-Boot time has not been measured. Wait for the simulation to show ACTIVE and each node console to present a login prompt. Login readiness does not prove WEKA readiness: continue with the checks below. If boot returns to INACTIVE, inspect History before changing the topology.
+Boot time has not been measured. Wait for ACTIVE and node login prompts. On a configured simulation, check `weka status` before testing. Client remounts can take tens of seconds while their containers start.
 
-### Console Access
+### Console Access and Device Credentials
 
-Use the Nodes or Topology tab to open the desired node console. Console access is the baseline path and does not require working external SSH keys.
+Open WekaNode01's console in Air. Login user is `ubuntu`. The Ubuntu image default password is `nvidia` if unchanged; the actual passwords used during validation were not recorded. Consult the node credential panel or lab owner for current passwords.
 
-### Device Credentials
-
-| Device | Username | Password/access | Management address |
+| Device | Username | Authentication | Management IP |
 | --- | --- | --- | --- |
-| Ubuntu backends | ubuntu | Air console showed default `nvidia`; use changed lab password if applicable | 192.168.200.11–18 |
-| Ubuntu clients | ubuntu | Air Ubuntu default `nvidia`; verify for the selected node | 192.168.200.21–22 |
-| SN5600-1 | cumulus | Template default `Cumu1usLinux!`; not verified in this lab; consult node credential panel | 192.168.200.3 |
-| oob-mgmt-server | ubuntu | Consult node console credentials; external SSH requires an authorized key | Discover in console |
+| WekaNode01–08 | ubuntu | Image default nvidia if unchanged; current password from node panel/owner | 192.168.200.11–18 |
+| Client01, Client02 | ubuntu | Passwordless SSH from Node01 verified; console password as above | 192.168.200.21–22 |
+| SN5600-1 | cumulus | Current password from node panel/owner; not recorded | 192.168.200.3 |
+| oob-mgmt-server | ubuntu | Air credential panel | Air-assigned |
 
 ### SSH Access
 
-In the reference simulation, Services > Enable SSH exposed the OOB server, not WekaNode01. New Service offered only `oob-mgmt-server:eth0`. External hostname and port are simulation-specific; copy them from the current Services row rather than reusing an old endpoint. Both tested Mac keys were rejected with `Permission denied (publickey)`; external SSH has not been validated.
+Node01's SSH key and passwordless `sudo -n` were verified on all ten Ubuntu hosts. External Mac SSH was not successfully validated. For external access, use current Air Services information and an authorized key; worker names and ports may change.
 
-Once logged into the OOB console, use backend management SSH. Backend username is `ubuntu`; enter its current password (Air default `nvidia` if unchanged).
+Full terminal prompts show where to run commands. Copy only the command after `$`.
 
-```console
-ubuntu@oob-mgmt-server:~$ ssh ubuntu@192.168.200.11
-ubuntu@WekaNode01:~$ hostname
-WekaNode01
+```bash
+ubuntu@WekaNode01:~$ ssh ubuntu@192.168.200.21
+ubuntu@Client01:~$ hostname
+Client01
+ubuntu@Client01:~$ exit
 ```
 
-Use hostname SSH only after confirming name resolution. For the switch, use `cumulus` and the password shown in its console credential panel:
-
-```console
-ubuntu@oob-mgmt-server:~$ ssh cumulus@192.168.200.3
-cumulus@SN5600-1:~$ hostname
-```
-
-Commands below include prompts to identify execution context, following the supplied guide format. Copy the text after `$`; do not paste the prompt itself.
+No installer token, license, or private key is included in the repository. The default WEKA admin-password warning remains active; this guide does not assume the current admin credential.
 
 <!-- AIR:page -->
 
 ## Lab Flow
 
-### Step 0. Commission the Eight-Node Lab Before Demonstrating It
+### Step 1. Verify cluster readiness
 
-**Goal:** Create a working deployment without assuming the JSON installed software.
+**Goal:** Confirm healthy storage before client tests. **Access/credentials:** WekaNode01 console as `ubuntu`, password `nvidia` if unchanged or the current node-panel/owner password. **Expected wait:** A few seconds per query after startup completes.
 
-**Access needed:** Air simulation controls, then each node console. Ubuntu credentials: `ubuntu` and the current lab password (default `nvidia` if unchanged). Switch credentials: `cumulus` and the node credential panel password.
-
-**Expected wait time:** Not yet measured; record boot and WEKA startup times during commissioning.
-
-1. Import `Weka8Backend_2Client_48GBDrive_host_passthrough.json` into a separate simulation. Resolve the memory quota first. Preserve the five-node reference and its checkpoint.
-2. Confirm eight backends, two clients, and one explicit switch. Verify each backend has the intended disks, CPU, RAM, and host-passthrough CPU mode.
-3. Configure the switch to place all ten attached data interfaces in the intended common Layer 2 network. Record the actual bridge/VLAN configuration and confirm a 9000-byte MTU across the path.
-4. Configure backend eth1 addresses 10.200.100.11–18/24 and client eth1 addresses .21–22/24, while preserving eth0 management. Verify all links before installing WEKA.
-5. Install the same approved WEKA release on all eight backends and both clients. The reference script assumes `weka` is already installed; it is not an installer.
-6. Adapt the verified five-node provisioning workflow for eight hosts and IPs. Inspect the container list and actual IDs before adding drives. Do not assume IDs 0–7 merely from node numbering. Check CLI help for the installed version before using provisioning options.
-7. Identify data/swap devices by serial, size, mount state, and boot-device ancestry on every VM. Do not blindly wipe `/dev/nvme0n1` or `/dev/nvme1n1`.
-8. Initialize the cluster, review protection/hot-spare settings against capacity, start I/O, and create the filesystem. The reference filesystem is `default` in group `default`, sized 80 GiB. Eight-node capacity and protection must be confirmed before selecting a size.
-9. Mount both clients with the approved UDP configuration, then complete Steps 1–6. Record actual protection, capacity, alerts, and fio output.
-
-Verification gate: do not proceed to a demonstration until eight backend containers and eight drives are UP, I/O is STARTED, both clients are connected, and shared-file access succeeds. This guide intentionally does not provide an untested destructive rebuild script.
-
-### Step 1. Inspect Backend Readiness
-
-**Goal:** Confirm the right VM, IPs, resources, and software.
-
-**Access needed:** WekaNode01 console. **Credentials:** `ubuntu`, current lab password (default `nvidia` if unchanged). **Expected wait:** Usually interactive; command timing has not been measured.
-
-```console
-ubuntu@WekaNode01:~$ hostname
-ubuntu@WekaNode01:~$ ip -br a
-ubuntu@WekaNode01:~$ free -h
-ubuntu@WekaNode01:~$ lsblk -o NAME,SIZE,TYPE,MOUNTPOINTS
-ubuntu@WekaNode01:~$ command -v weka
+```bash
 ubuntu@WekaNode01:~$ weka version
+* 5.1.34
+ubuntu@WekaNode01:~$ weka status
+ubuntu@WekaNode01:~$ weka cluster container
+ubuntu@WekaNode01:~$ weka cluster drive
+ubuntu@WekaNode01:~$ weka fs
 ```
 
-Expected result: WekaNode01, eth0 192.168.200.11/24, eth1 10.200.100.11/24 after configuration, roughly 24 GiB allocated memory, a 32 GB boot device, and separate 48 GB/8 GB NVMe devices. Linux may display disk capacity in GiB. The reference active WEKA version is 5.1.0.605; repeat version and disk checks on every backend and client before commissioning.
+Expected: cluster `WekaDSXAirDemo8Node`, status OK, eight backends and eight drives UP, 5+2 fully protected, hot spare 1, I/O STARTED, and two clients. All data disks should be ACTIVE with attachment OK. Client IDs were 8 and 9 in this build; IDs can differ after another deployment.
 
-Validation: compare interfaces with IPAM and inspect device sizes/serials rather than relying on device numbering.
+### Step 2. Verify data network and switch
 
-### Step 2. Verify the Data Network and Switch
+**Goal:** Confirm a working 9000-byte data path. **Access/credentials:** Node01 as `ubuntu`; switch SSH as `cumulus` with its current node-panel/owner password. **Expected wait:** Approximately 20 seconds for the pings, plus login time.
 
-**Goal:** Verify reachability before investigating storage.
-
-**Access needed:** WekaNode01 console (`ubuntu`, current password; default `nvidia` if unchanged). Switch console (`cumulus`, credential-panel password). **Expected wait:** About two seconds per two-packet ping plus any timeout.
-
-```console
-ubuntu@WekaNode01:~$ for ip in 10.200.100.11 10.200.100.12 10.200.100.13 10.200.100.14 10.200.100.15 10.200.100.16 10.200.100.17 10.200.100.18 10.200.100.21 10.200.100.22; do ping -I eth1 -c 2 -W 2 "$ip" || break; done
-ubuntu@WekaNode01:~$ ping -I eth1 -M do -s 8972 -c 3 10.200.100.21
+```bash
+ubuntu@WekaNode01:~$ ip -br a
+ubuntu@WekaNode01:~$ for n in 12 13 14 15 16 17 18 21 22; do ping -I eth1 -c 2 -W 3 -M do -s 8972 "10.200.100.$n"; done
+ubuntu@WekaNode01:~$ ssh cumulus@192.168.200.3
+cumulus@SN5600-1:~$ nv show bridge domain br_default
 cumulus@SN5600-1:~$ ip -br link
-cumulus@SN5600-1:~$ bridge link show
-cumulus@SN5600-1:~$ bridge vlan show
+cumulus@SN5600-1:~$ exit
 ```
 
-Expected result: replies from each host; jumbo packets succeed only when the whole path supports the intended 9000-byte IP MTU. The supplied five-node log confirmed ordinary pings to all seven hosts; it did not capture a jumbo-frame test or switch configuration.
+Expected: zero packet loss to the seven other backends and both clients. The ten data ports should forward in `br_default`, access VLAN 100, MTU 9000. For failed pings, check host/switch MTU and bridge membership before changing WEKA.
 
-Validation: compare switch interfaces with the connectivity table and confirm forwarding membership. A failed jumbo test with successful small pings suggests an MTU/path issue to investigate, not proof of a WEKA fault.
+### Step 3. Verify client mounts
 
-### Step 3. Inspect Cluster Health
+**Goal:** Confirm both clients mount the native filesystem. **Access/credentials:** Node01 `ubuntu`, installed SSH key to both client `ubuntu` accounts; no password required. **Expected wait:** A few seconds.
 
-**Goal:** Establish storage readiness and inspect unresolved alerts.
+```bash
+ubuntu@WekaNode01:~$ PDSH_RCMD_TYPE=ssh pdsh -l ubuntu -w '192.168.200.[21-22]' 'hostname; findmnt -T /mnt/weka; df -h /mnt/weka; sudo -n weka local ps'
+```
 
-**Access needed:** WekaNode01 console. **Credentials:** `ubuntu`, current password (default `nvidia` if unchanged); existing WEKA CLI authorization where required. **Expected wait:** Interactive; no measured duration.
+Expected: type `wekafs`, source `10.200.100.11/default`, mount `/mnt/weka`, about 80 GiB capacity, and client container Running/Ready. An existing directory alone is not proof of a mount.
 
-```console
-ubuntu@WekaNode01:~$ weka status
-ubuntu@WekaNode01:~$ weka cluster drive
-ubuntu@WekaNode01:~$ weka fs
+### Step 4. Demonstrate shared-file access
+
+**Goal:** Write through Client01 and read through Client02. **Access/credentials:** Node01 `ubuntu`, key-based SSH to client `ubuntu` accounts. **Expected wait:** A few seconds. This guided test has not yet been captured in the validation record.
+
+```bash
+ubuntu@WekaNode01:~$ ssh ubuntu@192.168.200.21 'test "$(findmnt -n -o FSTYPE -T /mnt/weka)" = wekafs && printf "WEKA shared filesystem check\n" > /mnt/weka/air-shared-file-check.txt && sha256sum /mnt/weka/air-shared-file-check.txt'
+ubuntu@WekaNode01:~$ ssh ubuntu@192.168.200.22 'test "$(findmnt -n -o FSTYPE -T /mnt/weka)" = wekafs && cat /mnt/weka/air-shared-file-check.txt && sha256sum /mnt/weka/air-shared-file-check.txt'
+```
+
+Expected: Client02 prints `WEKA shared filesystem check`; both checksums match. The demo build made the filesystem root writable by `ubuntu`. Use a dedicated application directory for later workloads.
+
+### Step 5. Run a write smoke test
+
+**Goal:** Demonstrate error-free writes. **Access/credentials:** Node01 key-based SSH to Client01 as `ubuntu`. **Expected wait:** 30 seconds plus file initialization. Approximately 2 GiB of test files remain in a unique directory.
+
+```bash
+ubuntu@WekaNode01:~$ ssh ubuntu@192.168.200.21
+ubuntu@Client01:~$ test "$(findmnt -n -o FSTYPE -T /mnt/weka)" = wekafs
+ubuntu@Client01:~$ FIO_DIR="/mnt/weka/fio-demo-$(hostname)-$(date +%Y%m%d-%H%M%S)"
+ubuntu@Client01:~$ mkdir -p "$FIO_DIR"
+ubuntu@Client01:~$ fio --name=weka-write-Client01 --directory="$FIO_DIR" --rw=write --bs=1M --size=1G --numjobs=2 --iodepth=8 --ioengine=libaio --direct=1 --runtime=30 --time_based --group_reporting
+ubuntu@Client01:~$ exit
+```
+
+Repeat separately on Client02 at `192.168.200.22`, using its `ubuntu` account, Node01's key, prompt `ubuntu@Client02`, and name `weka-write-Client02`. Success means `err=0`. Recorded results: Client01 76.1 MiB/s; Client02 74.1 MiB/s. These were separate runs, not combined throughput. Air contention can change results.
+
+### Step 6. Review alerts and preserve results
+
+**Goal:** Capture success and remaining issues. **Access/credentials:** Node01 as `ubuntu`; client SSH uses its key. **Expected wait:** A few seconds.
+
+```bash
 ubuntu@WekaNode01:~$ weka alerts
-ubuntu@WekaNode01:~$ sudo weka local ps
+ubuntu@WekaNode01:~$ PDSH_RCMD_TYPE=ssh pdsh -l ubuntu -w '192.168.200.[21-22]' 'hostname; free -h; ps -eo pid,comm,rss --sort=-rss | head -n 10'
 ```
 
-Expected result: 8 backend containers UP, 8 drives UP, I/O STARTED, and two clients connected. These are acceptance targets, not observed results. Record the actual protection scheme, hot spare, capacity, licensing, and alert state; do not copy five-node output into the eight-node validation record.
+Recorded: five alerts, comprising two client available-memory alerts and warnings for default admin password, missing license, and system-defined TLS. Both clients later showed approximately 2.1 GiB available RAM, below the 3000 MB threshold.
 
-Validation: capture the complete outputs and review alerts before claiming readiness. The reference log's earlier STOPPING_BUCKETS state preceded teardown; the later successful rebuild superseded it.
-
-### Step 4. Confirm Client Mounts and Shared File Access
-
-**Goal:** Prove both clients see the same filesystem.
-
-**Access needed:** Client01 and Client02 consoles. **Credentials for each:** `ubuntu`, current lab password (default `nvidia` if unchanged). **Expected wait:** A few interactive commands; not measured.
-
-The supplied client setup script mounts with `net=udp,num_cores=0,mgmt_ip=<client-data-IP>` and backend endpoint `10.200.100.11/default`. This is reference configuration, not a command to reset an already-mounted client.
-
-First inspect both client mounts:
-
-```console
-ubuntu@Client01:~$ findmnt -T /mnt/weka
-ubuntu@Client01:~$ df -hT /mnt/weka
-ubuntu@Client02:~$ findmnt -T /mnt/weka
-ubuntu@Client02:~$ df -hT /mnt/weka
-```
-
-Confirm the reported filesystem type is `wekafs`. If `/mnt/weka` resolves to the Ubuntu root filesystem, stop; a directory existing is not evidence of a WEKA mount.
-
-Write and read a small demonstration file:
-
-```console
-ubuntu@Client01:~$ test "$(findmnt -n -o FSTYPE -T /mnt/weka)" = wekafs && mkdir -p /mnt/weka/air-lab-validation && printf 'WEKA shared-file check from Client01\n' > /mnt/weka/air-lab-validation/client01-check.txt
-ubuntu@Client02:~$ test "$(findmnt -n -o FSTYPE -T /mnt/weka)" = wekafs && cat /mnt/weka/air-lab-validation/client01-check.txt
-WEKA shared-file check from Client01
-```
-
-Expected result: Client02 reads the exact line written by Client01. This check has not been captured in the supplied evidence; execute it and retain the output.
-
-### Step 5. Run a Short Functional I/O Test
-
-**Goal:** Generate bounded test traffic on the mounted filesystem.
-
-**Access needed:** Client01 console, then Client02 if desired. **Credentials:** `ubuntu`, current password (default `nvidia` if unchanged). **Expected wait:** Approximately 30 seconds plus file setup/flush time per run. Confirm several GiB of free space and installed `fio` first.
-
-```console
-ubuntu@Client01:~$ command -v fio
-ubuntu@Client01:~$ test "$(findmnt -n -o FSTYPE -T /mnt/weka)" = wekafs && mkdir -p /mnt/weka/air-lab-validation/fio-client01 && fio --name=air-client01-write --directory=/mnt/weka/air-lab-validation/fio-client01 --rw=write --bs=1M --size=2G --numjobs=2 --iodepth=8 --ioengine=libaio --direct=1 --runtime=30 --time_based --group_reporting
-```
-
-Use a separate `fio-client02` directory and job name if testing Client02. Expected result: fio completes without I/O errors and prints WRITE bandwidth. A time-based run can write more cumulative data than its allocated file size. Do not overwrite application files or run a production workload here.
-
-No eight-node fio result is available. Record actual bandwidth, runtime, client, and whether tests ran sequentially or concurrently. Do not predict an improvement from backend count alone.
-
-Validation: retain the fio output and recheck `weka status`. Idle reads/writes after fio finishes are expected.
-
-### Step 6. Capture Evidence and Preserve the Lab
-
-**Goal:** Retain working scripts and validation records before changing simulations.
-
-**Access needed:** WekaNode01 console and Air Checkpoints tab. **Credentials:** `ubuntu`, current password (default `nvidia` if unchanged). **Expected wait:** Checkpoint duration is not measured; wait for the UI to confirm completion.
-
-```console
-ubuntu@WekaNode01:~$ weka status
-ubuntu@WekaNode01:~$ weka cluster drive
-ubuntu@WekaNode01:~$ weka fs
-ubuntu@WekaNode01:~$ weka alerts
-ubuntu@WekaNode01:~$ ls -l ~/*.sh
-```
-
-For the existing five-node home directory, archive the known scripts and storage file:
-
-```console
-ubuntu@WekaNode01:~$ cd ~
-ubuntu@WekaNode01:~$ tar -czvf weka-scripts-backup.tar.gz -- *.sh *.sh.bak storage.5
-ubuntu@WekaNode01:~$ tar -tzf weka-scripts-backup.tar.gz
-ubuntu@WekaNode01:~$ sha256sum weka-scripts-backup.tar.gz
-```
-
-The reference archive contains six `.sh` files, one `.sh.bak`, and `storage.5`. New eight-node filenames will differ; review the actual directory before selecting files. A script archive does not contain WEKA binaries, switch configuration, cluster data, or a complete VM backup.
-
-Create a named checkpoint in Air and verify its completed state. A successful checkpoint has not yet been reported for either lab. Export the topology separately; JSON export does not substitute for a saved working state.
+Preserve the configured simulation using the Air organization's available save/checkpoint workflow. Topology export is not a VM/data backup. Restore and reboot behavior have not been validated.
 
 <!-- AIR:page -->
 
+## Fresh Build
+
+Use this section only for a newly imported, unused eight-backend topology. Do not run fresh-build scripts against the working five-node or initialized eight-node cluster.
+
+The [build script](scripts/02_create_8backend_2client_weka_demo.sh) initializes swap, removes initial STEM containers, creates UDP backends, forms the cluster, discovers container IDs, adds verified disks, starts I/O with 5+2 protection and one hot spare, creates the filesystem, and mounts/tests both clients. It does not install WEKA or configure the switch/host networking. It contains fixes for the empty-host guard and WEKA CSV headers encountered during commissioning. The corrected complete build has not been rerun in one pass on a second fresh simulation.
+
+### Prepare management SSH and WEKA
+
+**Access/credentials:** Node01 as `ubuntu`, current console password; image default `nvidia` if unchanged. Enter each target's current Ubuntu password at `ssh-copy-id`. **Expected wait:** Up to ten password entries; software download time varies.
+
+```bash
+ubuntu@WekaNode01:~$ if [ ! -f ~/.ssh/id_ed25519 ]; then ssh-keygen -t ed25519 -f ~/.ssh/id_ed25519 -N ''; fi
+ubuntu@WekaNode01:~$ for n in 11 12 13 14 15 16 17 18 21 22; do ssh-copy-id -i ~/.ssh/id_ed25519.pub -o StrictHostKeyChecking=accept-new ubuntu@192.168.200.$n; done
+ubuntu@WekaNode01:~$ PDSH_RCMD_TYPE=ssh pdsh -l ubuntu -w '192.168.200.[11-18],192.168.200.[21-22]' 'hostname; sudo -n true; weka version; sudo -n weka local ps'
+```
+
+Install approved WEKA 5.1.34 software on all ten hosts before the build. Obtain the authorized installer URL through the WEKA account contact; its credential is not embedded in the repository. Verify version 5.1.34 and initial default containers in STEM mode. Software installation and initial startup were completed separately in the recorded lab. The build requires Python 3 and OpenSSH on Node01; network/validation examples use pdsh.
+
+### Configure fresh switch and hosts
+
+**Access/credentials:** Switch console as `cumulus` using its current node-panel/owner password; Node01 `ubuntu` uses internal SSH keys. **Expected wait:** Allow NVUE/Netplan to finish and SSH to settle; keep consoles available.
+
+These switch settings were validated in the eight-node lab:
+
+```bash
+cumulus@SN5600-1:~$ sudo ztp -d
+cumulus@SN5600-1:~$ nv set bridge domain br_default vlan 100
+cumulus@SN5600-1:~$ for p in swp1s0 swp1s1 swp2 swp3 swp4 swp5 swp6 swp7 swp8 swp9; do nv set interface "$p" bridge domain br_default; nv set interface "$p" bridge domain br_default access 100; nv set interface "$p" link mtu 9000; done
+cumulus@SN5600-1:~$ nv config apply
+cumulus@SN5600-1:~$ nv show bridge domain br_default
+```
+
+Host files under `config/netplan` specify only `eth1`: the expected /24 address, MTU 9000, and DHCP disabled. Back up current Netplan files and inspect the merged configuration. From the full repository root on Node01, preview then apply the host helper on the fresh lab:
+
+```bash
+ubuntu@WekaNode01:~/weka-dsx-air-demo$ bash 1_setup_data_network.sh --lab 8node
+ubuntu@WekaNode01:~/weka-dsx-air-demo$ bash 1_setup_data_network.sh --lab 8node --apply
+ubuntu@WekaNode01:~/weka-dsx-air-demo$ bash 0_preflight.sh --lab 8node
+```
+
+These root helpers require the full repository. Validate all management/data addresses, passwordless SSH/sudo, disk serials, and Step 2 jumbo pings before building.
+
+### Build the fresh cluster
+
+**Access/credentials:** Run as `ubuntu` on WekaNode01 with the installed SSH key and passwordless sudo. **Expected wait:** Several minutes for container/cluster startup and two 30-second tests, plus any client fio package installation. The health wait has a ten-minute timeout.
+
+```bash
+ubuntu@WekaNode01:~/weka-dsx-air-demo$ bash labs/8node/scripts/02_create_8backend_2client_weka_demo.sh
+```
+
+Defaults: cluster `WekaDSXAirDemo8Node`; filesystem `default`; group `group1`; size 80 GiB; mount `/mnt/weka`. Each backend is configured with 3 cores and 4 GiB WEKA memory. The recorded UDP container table displayed `CORES 0`; this column is recorded as observed rather than used to infer effective process allocation. Cluster status showed 24 I/O nodes UP.
+
+The [continuation script](scripts/04_continue_8backend_2client_weka_demo.sh) is specific to the recorded original cluster UUID after its parser failure and before drive addition. It is not a general recovery tool and must not be run against the now-initialized cluster.
+
 ## Validation Summary
 
-| Check | Acceptance condition | Current evidence |
-| --- | --- | --- |
-| Backend containers | 8 UP | Pending |
-| Drives | 8 UP | Pending |
-| I/O | STARTED | Pending |
-| Protection | Reported fully protected | Pending; scheme to confirm |
-| Clients | 2 connected, wekafs mounted | Pending |
-| Shared file | Client02 reads Client01 file | Not yet captured |
-| Jumbo path | 8972-byte ICMP payload succeeds | Not yet captured |
-| fio | Completes with no I/O errors | Pending |
-| Alerts/license | Reviewed and documented | Pending |
-| Checkpoint | Completed checkpoint retained | Not yet confirmed |
+Terminal evidence was captured October 1, 2026, around 08:35 Pacific. The author inspected supplied output rather than directly accessing the VMs.
+
+| Check | Observed result |
+| --- | --- |
+| WEKA | 5.1.34 on eight backends and two clients |
+| Cluster | WekaDSXAirDemo8Node; UUID ba6d7699-3df0-4ada-a00e-29855bb03df1 |
+| Health | OK; 8 backends UP; 8 drives UP and ACTIVE, attachment OK |
+| Protection | 5+2 fully protected |
+| Hot spare | 1 failure domain, 28.12 GiB |
+| Drive storage | 198.56 GiB total usable, 118.56 GiB unprovisioned |
+| Filesystem | default / group1, 80 GiB; both clients mounted at /mnt/weka |
+| I/O | STARTED; 24 I/O nodes UP; 6 buckets UP |
+| Clients | 2 connected; Running/Ready |
+| Jumbo pings | Node01 to seven backends and both clients: zero packet loss |
+| Client01 write | 76.1 MiB/s, 30.222 seconds, err=0 |
+| Client02 write | 74.1 MiB/s, 30.115 seconds, err=0 |
+| License / alerts | Unlicensed; five alerts |
+| Shared-file checksums | Guided test supplied; result not captured |
+| Reboot / checkpoint restore | Not validated; mounts are temporary |
 
 ## Troubleshooting, Upgrade, or Reset
 
-### Air Launch Fails
+### Client memory alerts
 
-Read History for a resource quota error. Stop/suspend only simulations you own or are authorized to manage after preserving their working state, or request an organization quota increase. Do not delete the reference lab to resolve a temporary memory shortage.
+Both clients have 8 GiB RAM and approximately 2.1 GiB available, below the recorded 3000 MB threshold. Increasing each to 16 GiB is a proposed sizing improvement; it has not been applied. Shared pages can appear in multiple process RSS values, so do not sum RSS to calculate unique usage. Plan remounts before any resource change that restarts a client.
 
-### SSH Returns Permission Denied (publickey)
+### Remount after a client restart
 
-The reference external OOB SSH endpoint rejected both tested Mac keys. Confirm the authorized public key and the correct local private key. Do not assume the Ubuntu console password enables external OOB SSH. Changing to a root shell on the Mac changes its SSH home and key lookup. Use Air consoles until access is resolved.
+**Access/credentials:** Node01 key-based SSH to Client01 `ubuntu`; passwordless sudo. **Expected wait:** Tens of seconds for the mount/client startup. Run only when the filesystem is not mounted.
 
-### No Data Address or Network Reachability
-
-Use `ip -br a` and inspect effective Netplan configuration on the affected node. In the reference rebuild log, immediate post-Netplan interface output temporarily lacked IPv4 addresses, while subsequent pings succeeded. Inspect current state before concluding addresses were lost. Preserve eth0 management and verify switch forwarding/MTU before rerunning network changes.
-
-### Container Startup or I/O Stalls
-
-On WekaNode01, login as `ubuntu` with its current password (default `nvidia` if unchanged). Capture read-only evidence:
-
-```console
-ubuntu@WekaNode01:~$ sudo weka local ps
-ubuntu@WekaNode01:~$ weka status
-ubuntu@WekaNode01:~$ weka alerts
-ubuntu@WekaNode01:~$ free -h
-ubuntu@WekaNode01:~$ swapon --show
-ubuntu@WekaNode01:~$ lsblk -o NAME,SIZE,TYPE,MOUNTPOINTS
+```bash
+ubuntu@WekaNode01:~$ ssh ubuntu@192.168.200.21
+ubuntu@Client01:~$ sudo -n mkdir -p /mnt/weka
+ubuntu@Client01:~$ mountpoint -q /mnt/weka || sudo -n mount -t wekafs -o net=udp,num_cores=0,mgmt_ip=10.200.100.21 10.200.100.11/default /mnt/weka
+ubuntu@Client01:~$ findmnt -T /mnt/weka
+ubuntu@Client01:~$ df -h /mnt/weka
+ubuntu@Client01:~$ exit
 ```
 
-Use installed CLI help to select supported logging commands. Do not treat a single 'Waiting for container to start up' line as proof of a permanent failure; capture current state and logs.
+For Client02 use SSH address `192.168.200.22`, its `ubuntu` account, prompt `ubuntu@Client02`, and mount option `mgmt_ip=10.200.100.22`. Expected type is `wekafs` and capacity approximately 80 GiB. Persistent mount setup remains a follow-up task.
 
-### Rebuild, Upgrade, and Reset
+### Other alerts and recovery
 
-`rebuild_5backend_2client_udp.sh` and `clean_teardown_dsx_weka.sh` remove containers and wipe backend disks. They are destructive lab recovery workflows, not health checks, and the five-node script must not be run as an eight-node deployment. The reference script also assumes existing WEKA installation, fixed disk numbering, and container IDs 0–4. Review and adapt those assumptions before use. Avoid suppressing errors in provisioning steps; record failures and verify readiness before proceeding.
+Address the default admin password, license, and TLS warnings through approved WEKA administration. A successful I/O test does not clear them. Capture `weka status`, `weka cluster container`, `weka cluster drive`, `weka alerts`, and build logs before recovery. Do not rerun backend cleanup after cluster creation.
 
-No eight-node upgrade/reset workflow has been validated. Preserve a checkpoint and collect diagnostics before planning a reset or changing versions.
+The corrected build accepts an empty initial host, skips absent-container removal, and handles WEKA's `Container ID` CSV header. Build logs are under `~/weka-8node-build-YYYYMMDD-HHMMSS/`. No destructive reset is part of this demonstration flow.
+
+### Upgrade
+
+The five-node reference was validated on 5.1.0.605; this eight-node lab uses 5.1.34. Plan upgrades separately with compatibility/license checks. Upgrade, failure/rebuild, reboot, and checkpoint recovery tests were not performed in this record.
 
 ## References
 
-- [NVIDIA DSX Air Quick Start](https://docs.nvidia.com/networking-ethernet-software/nvidia-air/Quick-Start/)
 - [NVIDIA DSX Air](https://dsx-air.nvidia.com/)
-- WEKA deployment and CLI documentation for the approved installed release (partner resource title; no external live link).
-- Source evidence: supplied five-backend topology JSON, five-node rebuild transcript, successful `weka status`/fio excerpt, and Air quota/Services screenshots.
+- [NVIDIA DSX Air Quick Start](https://docs.nvidia.com/networking-ethernet-software/nvidia-air/Quick-Start/)
+- [Cumulus Linux 5.16 documentation](https://docs.nvidia.com/networking-ethernet-software/cumulus-linux-516/)
+- Partner documentation titles: WEKA 5.1 CLI reference, manual cluster configuration, native filesystem mounts, and alert administration. Obtain these through the approved WEKA documentation channel.
 
 ## Contact Info
 
-| Contact type | Details |
+| Contact type | Contact path |
 | --- | --- |
 | Lab owner | Chandra Sekhar Gonuguntla (Sekhar) |
-| Air resources | Organization administrator; David is the current resource-request contact |
-| WEKA support | Existing approved WEKA support channel for this lab |
-| Publication | Approved NVIDIA-hosted repository/location to be supplied by the publishing owner |
+| WEKA installation, license, or software | Approved WEKA support/account contact |
+| Air quota and simulation access | Air organization administrator / NVIDIA DSX Air team |
 
-## Publication Readiness
-
-This guide is based on session evidence and has not been executed end to end by the authoring assistant. Keep pending checks visible until completed. Verify node credentials, actual switch version/configuration, approved software/licensing, boot timing, checkpoint recovery, and all validation outputs before publishing as a finished demo. Include the relative `images/` assets with the Markdown in the same repository change. The supplied template's restriction to NVIDIA-owned live links is preserved. No Git repository was created or published by this document-generation task.
+This guide follows the supplied Air template. GitHub packaging is separate from any future publication to an NVIDIA-hosted lab catalog.
