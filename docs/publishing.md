@@ -1,24 +1,18 @@
-# Publishing the standard eight-node lab
+# GitHub and Marketplace handoff
 
-Repository: `sekharg-weka/weka-dsx-air-demo`. The standard topology is eight backends, two clients, and one virtual Cumulus switch. The local Mac checkout is `~/Downloads/weka-dsx-air-demo`.
+Existing private repository: https://github.com/sekharg-weka/weka-dsx-air-demo
 
-After applying the prepared standard-topology update, validate and publish from the repository root:
+Apply the prepared update to a clean checkout, run checks, review the diff, commit and push. Keep the repo private unless its owner authorizes a visibility change. For durable team ownership, the owner can transfer it to the appropriate WEKA GitHub organization and grant Bob/team access; neither transfer nor permissions are automated by this package.
 
 ```bash
 python3 scripts/check_repository.py
+for f in labs/8node/scripts/*.sh; do bash -n "$f" || exit; done
 git diff --stat
 git add -A
-git commit -m "Standardize WEKA DSX Air demo on eight backends"
+git commit -m "Add clean-checkpoint eight-node WEKA demo workflow"
 git push origin main
 ```
 
-The update utility requires a clean checkout, checks the origin repository, and backs up replaced and removed files outside the checkout. It does not change visibility or create another repository.
+For a genuinely new private repository, use scripts/publish_github.sh with the intended GitHub owner. It refuses an existing repo. Configure your Git author identity before committing.
 
-Repository-local author identity:
-
-```bash
-git config user.name "Chandra Sekhar Gonuguntla"
-git config user.email "chandrasekhar.gonuguntla@weka.io"
-```
-
-GitHub publication is separate from an NVIDIA-hosted lab catalog submission. No installer credentials, licenses, private keys, or VM images are included. No new license terms are assigned.
+Marketplace documentation should be included in the published demo so NVIDIA reviewers do not depend on private GitHub access. Use the verified clean checkpoint, retain internal visibility as appropriate, and provide the actual demo link after publication. No successful new Marketplace publish is asserted here.

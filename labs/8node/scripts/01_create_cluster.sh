@@ -10,7 +10,7 @@ FS_NAME="${FS_NAME:-default}"
 FS_GROUP="${FS_GROUP:-group1}"
 FS_SIZE="${FS_SIZE:-80GiB}"
 MOUNT_POINT="${MOUNT_POINT:-/mnt/weka}"
-RUN_FIO="${RUN_FIO:-1}"
+RUN_FIO=0
 BACKENDS=(WekaNode01 WekaNode02 WekaNode03 WekaNode04 WekaNode05 WekaNode06 WekaNode07 WekaNode08)
 BACKEND_IPS=(10.200.100.11 10.200.100.12 10.200.100.13 10.200.100.14 10.200.100.15 10.200.100.16 10.200.100.17 10.200.100.18)
 SSH_OPTS=(-o BatchMode=yes -o StrictHostKeyChecking=accept-new -o ConnectTimeout=10)
@@ -60,7 +60,9 @@ if (( n <= 18 )); then
     serial=$(lsblk -dn -o SERIAL "$dev" | tr -d '[:space:]')
     [[ $serial == "$expected" ]] || { echo "Unexpected serial on $dev: $serial"; exit 1; }
     [[ $(lsblk -nr -o NAME "$dev" | wc -l) -eq 1 ]]
+    if [[ $dev == /dev/nvme0n1 ]]; then
     [[ -z $(lsblk -dn -o MOUNTPOINTS "$dev" | tr -d '[:space:]') ]]
+    fi
     types=$(wipefs --no-act --noheadings --output TYPE "$dev" | tr -d '[:space:]')
     if [[ $dev == /dev/nvme0n1 ]]; then
       [[ -z $types ]] || { echo "Data disk has signatures: $types"; exit 1; }
@@ -174,45 +176,9 @@ sudo -n weka fs group create "$FS_GROUP"
 sudo -n weka fs create "$FS_NAME" "$FS_GROUP" "$FS_SIZE"
 sudo -n weka fs
 
-echo '=== Mount the filesystem on both clients using UDP ==='
-for n in 21 22; do
-  remote "$n" "sudo -n bash -s -- $n $FS_NAME $MOUNT_POINT $RUN_FIO" <<'REMOTE'
-set -euo pipefail
-n="$1"; fs="$2"; mp="$3"; run_fio="$4"
-if ! command -v fio >/dev/null; then
-  apt-get update
-  DEBIAN_FRONTEND=noninteractive apt-get install -y fio
-fi
-# These clients were checked as initial STEM containers during preflight.
-if weka local ps --color disabled | grep -Eq '^default[[:space:]]+65535[[:space:]]+Running[[:space:]]+STEM mode'; then
-  weka local stop default
-fi
-if weka local ps --color disabled | grep -Eq "^default[[:space:]]"; then
-  weka local rm --force default
-fi
-mkdir -p "$mp"
-if mountpoint -q "$mp"; then echo "Already mounted: $mp"; exit 1; fi
-mount -t wekafs -o "net=udp,num_cores=0,mgmt_ip=10.200.100.$n" "10.200.100.11/$fs" "$mp"
-# Write access for ubuntu, without making the whole filesystem world writable.
-chown ubuntu:ubuntu "$mp"
-chmod 0755 "$mp"
-findmnt -T "$mp"
-df -h "$mp"
-weka local ps
-if [[ $run_fio == 1 ]]; then
-  testdir="$mp/fio-smoke-$(hostname)-$(date +%Y%m%d-%H%M%S)"
-  install -d -o ubuntu -g ubuntu "$testdir"
-  sudo -u ubuntu fio --name="weka-client-write-$(hostname)" \
-    --directory="$testdir" --rw=write --bs=1M --size=1G \
-    --numjobs=2 --iodepth=8 --ioengine=libaio --direct=1 \
-    --runtime=30 --time_based --group_reporting
-fi
-REMOTE
-done
-echo '=== Final cluster status ==='
+echo '=== Final backend validation ==='
 sudo -n weka status
-sudo -n weka cluster container
 sudo -n weka cluster drive
-sudo -n weka alerts
-echo "Build finished. Logs: $LOG_DIR"
-echo 'Client mounts are active for this session; reboot persistence is not configured.'
+sudo -n weka fs
+echo "Cluster creation finished. Logs: $LOG_DIR"
+echo 'Next: bash 02_mount_clients.sh'
