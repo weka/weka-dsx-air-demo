@@ -3,8 +3,10 @@
 # Run as ubuntu on WekaNode01. Installation and data network must already work.
 # Removes only initial default STEM containers. Adds nvme0n1 to WEKA;
 # initializes blank nvme1n1 as swap. Refuses to rebuild an existing cluster.
+set +x
 set -Eeuo pipefail
 umask 077
+WEKA_ADMIN_PASSWORD="${WEKA_ADMIN_PASSWORD:-Weka.io123}"
 CLUSTER_NAME="${CLUSTER_NAME:-WekaDSXAirDemo8Node}"
 FS_NAME="${FS_NAME:-default}"
 FS_GROUP="${FS_GROUP:-group1}"
@@ -24,6 +26,8 @@ done
 [[ $RUN_FIO == 0 || $RUN_FIO == 1 ]] || exit 1
 LOG_DIR="$HOME/weka-8node-build-$(date +%Y%m%d-%H%M%S)"
 mkdir -p "$LOG_DIR"
+# Preserve the terminal output so credentials are not copied into build.log.
+exec 3>&1
 exec > >(tee "$LOG_DIR/build.log") 2>&1
 trap 'rc=$?; echo "Stopped at line $LINENO (exit $rc). Log: $LOG_DIR/build.log"; echo "Do not run teardown or blindly rerun; inspect the failed phase first."; exit "$rc"' ERR
 sudo -n true
@@ -125,6 +129,25 @@ done
 echo '=== Create eight-backend cluster ==='
 HOST_IPS=$(IFS=,; echo "${BACKEND_IPS[*]/%/:14000}")
 sudo -n weka cluster add "${BACKENDS[@]}" --host-ips="$HOST_IPS"
+echo '=== Set admin password and authenticate ==='
+# A newly created cluster starts with admin/admin. Wait for its login endpoint.
+authenticated=0
+for attempt in $(seq 1 30); do
+  if sudo -n weka user login admin admin >/dev/null 2>&1; then
+    authenticated=1; break
+  fi
+  sleep 2
+done
+[[ $authenticated == 1 ]] || { echo 'Initial admin login failed; inspect the new cluster before continuing.'; exit 1; }
+if ! sudo -n weka user passwd --username admin --current-password admin "$WEKA_ADMIN_PASSWORD" >/dev/null 2>&1; then
+  echo 'Admin password change failed; inspect the new cluster before continuing.'; exit 1
+fi
+# Root executes cluster setup; ubuntu runs the subsequent demo scripts.
+if ! sudo -n weka user login admin "$WEKA_ADMIN_PASSWORD" >/dev/null 2>&1 ||
+   ! weka user login admin "$WEKA_ADMIN_PASSWORD" >/dev/null 2>&1; then
+  echo 'Password changed, but login failed. Log in with the configured new password before continuing.'; exit 1
+fi
+echo 'Admin password updated; root and ubuntu CLI profiles authenticated.'
 sudo -n weka cluster update --cluster-name "$CLUSTER_NAME"
 sudo -n weka cluster container
 # Read actual IDs from the cluster instead of assuming IDs 0 through 7.
@@ -182,3 +205,4 @@ sudo -n weka cluster drive
 sudo -n weka fs
 echo "Cluster creation finished. Logs: $LOG_DIR"
 echo 'Next: bash 02_mount_clients.sh'
+printf '\nWEKA GUI credentials\nUsername: admin\nPassword: %s\nOpen the HTTPS URL assigned to weka-gui in Air Services.\n' "$WEKA_ADMIN_PASSWORD" >&3

@@ -13,3 +13,5 @@ Scripts live in labs/8node/scripts. Run as ubuntu with passwordless sudo.
 | 05b_node01_gui_relay.sh | WekaNode01 | Optional management-to-data relay on port 14001. |
 
 Follow the [lab guide](../labs/8node/README.md). Scripts are intentionally separated for demonstrations and diagnosis. Only reset uses --apply; creation is not a general resume command. Never continue past a failed preflight without inspecting its cause.
+
+The creation script changes the fresh cluster's default admin password to `Weka.io123`, logs in both root and ubuntu CLI profiles, and displays the GUI credentials outside its build log. Override the default with `WEKA_ADMIN_PASSWORD` before running. OOB console access uses `ubuntu / WekaDsx@123`; the GUI relay script does not change the OOB account password.

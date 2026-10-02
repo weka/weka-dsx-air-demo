@@ -17,6 +17,6 @@ Use the [lab guide](labs/8node/README.md) for cluster creation, client mounts, v
 | 30-minute demonstration | [Demo agenda](docs/demo-agenda.md) |
 | GitHub handoff | [Publishing](docs/publishing.md) |
 
-This repository contains no installer token, license, passwords, or private SSH keys. The lab demonstrates functionality; simulated throughput is not a production benchmark. The data network is L2 VLAN 100; this is not an L3 or RDMA deployment.
+The lab guide documents demo credentials: OOB console `ubuntu / WekaDsx@123` and WEKA GUI/CLI `admin / Weka.io123` after cluster creation. The creation script sets the WEKA lab password and authenticates root and ubuntu CLI profiles. This repository contains no installer token, license, or private SSH keys. The lab demonstrates functionality; simulated throughput is not a production benchmark. The data network is L2 VLAN 100; this is not an L3 or RDMA deployment.
 
 The reset script deletes the lab's filesystem data. It targets the documented ten management IPs and does not require a cluster UUID or cluster login.
