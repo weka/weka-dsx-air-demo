@@ -7,4 +7,4 @@ network:
       dhcp4: false
       dhcp6: false
       addresses:
-        - 10.200.100.22/24
+        - 10.200.100.20/24
