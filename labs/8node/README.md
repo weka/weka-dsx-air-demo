@@ -99,8 +99,8 @@ Ubuntu hosts use the default routing table for both interfaces. The Cumulus swit
 | WekaNode06 | 192.168.200.16/24 | 10.200.100.16/24 | 100 | 9000 |
 | WekaNode07 | 192.168.200.17/24 | 10.200.100.17/24 | 100 | 9000 |
 | WekaNode08 | 192.168.200.18/24 | 10.200.100.18/24 | 100 | 9000 |
-| Client01 | 192.168.200.21/24 | 10.200.100.21/24 | 100 | 9000 |
-| Client02 | 192.168.200.22/24 | 10.200.100.22/24 | 100 | 9000 |
+| Client01 | 192.168.200.21/24 | 10.200.100.19/24 | 100 | 9000 |
+| Client02 | 192.168.200.22/24 | 10.200.100.20/24 | 100 | 9000 |
 | SN5600-1 | 192.168.200.3/24 | L2 switching; no host data IP | 100 | 9000 on host data ports |
 | oob-mgmt-server | Assigned by Air; inspect its node panel | Not attached to storage VLAN | — | — |
 
