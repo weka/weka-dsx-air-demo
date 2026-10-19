@@ -6,7 +6,7 @@
             "Client01": {
                 "cpu": 4,
                 "memory": 9216,
-                "storage": 20,
+                "storage": 32,
                 "positioning": {
                     "x": 1650,
                     "y": 275
@@ -37,7 +37,7 @@
             "Client02": {
                 "cpu": 4,
                 "memory": 9216,
-                "storage": 20,
+                "storage": 32,
                 "positioning": {
                     "x": 1650,
                     "y": 0
