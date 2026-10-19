@@ -36,7 +36,7 @@
             },
             "Client02": {
                 "cpu": 4,
-                "memory": 8192,
+                "memory": 9000,
                 "storage": 20,
                 "positioning": {
                     "x": 1650,
