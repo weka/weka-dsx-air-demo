@@ -8,7 +8,7 @@ run="$(date -u +%Y%m%dT%H%M%SZ)-$$"
 logs="$HOME/weka-fio-$run"; mkdir -p "$logs"
 exec > >(tee "$logs/fio.log") 2>&1
 folder="/mnt/weka/fio-verify-$run"
-for n in 21 22; do
+for n in 19 20; do
   ssh "${opts[@]}" "ubuntu@192.168.200.$n" 'sudo -n bash -s' <<'REMOTE'
 set -euo pipefail
 [[ $(findmnt -n -o FSTYPE -T /mnt/weka) == wekafs ]]
@@ -19,7 +19,7 @@ fi
 fio --version
 REMOTE
 done
-for n in 21 22; do
+for n in 19 20; do
   ssh "${opts[@]}" "ubuntu@192.168.200.$n" "bash -s -- '$folder' $n" <<'REMOTE'
 set -euo pipefail
 folder="$1"; n="$2"
@@ -33,7 +33,7 @@ fio --name=weka-write --filename="$file" --rw=write --bs=1M --size=1G \
   --verify=crc32c --do_verify=0 --end_fsync=1 --group_reporting
 REMOTE
 done
-for n in 21 22; do
+for n in 19 20; do
   peer=$((43-n))
   ssh "${opts[@]}" "ubuntu@192.168.200.$n" "bash -s -- '$folder' $peer" <<'REMOTE'
 set -euo pipefail
