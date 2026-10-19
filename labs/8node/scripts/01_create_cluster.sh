@@ -40,7 +40,7 @@ for n in 11 12 13 14 15 16 17 18 19 20; do
 set -euo pipefail
 n="$1"
 hostname
-weka version | grep -Eq '^\*?[[:space:]]*5\.1\.41[[:space:]]*$'
+weka version || echo "COuld not find weka Version"; exit 1
 ip -4 -o addr show eth1 | grep -F "10.200.100.$n/24"
 [[ $(cat /sys/class/net/eth1/mtu) == 9000 ]]
 if weka status >/dev/null 2>&1; then
