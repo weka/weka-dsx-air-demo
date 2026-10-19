@@ -13,7 +13,7 @@ MOUNT_POINT="${MOUNT_POINT:-/mnt/weka}"
 [[ $MOUNT_POINT =~ ^/[A-Za-z0-9_./-]+$ && $MOUNT_POINT != / && $MOUNT_POINT != *..* ]] || exit 1
 opts=(-o BatchMode=yes -o StrictHostKeyChecking=accept-new -o ConnectTimeout=10)
 # Preflight BOTH hosts before unmounting either one.
-for n in 21 22; do
+for n in 19 20; do
   ssh "${opts[@]}" "ubuntu@192.168.200.$n" "sudo -n bash -s -- $n $MOUNT_POINT" <<'REMOTE'
 set -euo pipefail
 n="$1"; mp="$2"
@@ -27,7 +27,7 @@ if mountpoint -q "$mp"; then
 fi
 REMOTE
 done
-for n in 21 22; do
+for n in 19 20; do
   echo "=== Unmount Client$((n-20)) / 192.168.200.$n ==="
   ssh "${opts[@]}" "ubuntu@192.168.200.$n" "sudo -n bash -s -- $MOUNT_POINT" <<'REMOTE'
 set -euo pipefail
@@ -46,7 +46,7 @@ echo "PASS: $(hostname) $mp is unmounted."
 REMOTE
 done
 if [[ $mode == --stop-client ]]; then
-  for n in 21 22; do
+  for n in 19 20; do
     ssh "${opts[@]}" "ubuntu@192.168.200.$n" 'sudo -n bash -s' <<'REMOTE'
 set -euo pipefail
 line=$(weka local ps --color disabled | awk '$1=="client"{print}')
