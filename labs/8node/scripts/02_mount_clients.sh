@@ -8,7 +8,7 @@ echo "$status"
 grep -Eq 'status:[[:space:]]+OK.*8 backend containers UP.*8 drives UP' <<< "$status"
 grep -Eq 'io status:[[:space:]]+STARTED' <<< "$status"
 weka fs
-for n in 21 22; do
+for n in 19 20; do
   ssh "${opts[@]}" "ubuntu@192.168.200.$n" "sudo -n bash -s -- $n" <<'REMOTE'
 set -euo pipefail
 n="$1"; mp=/mnt/weka
