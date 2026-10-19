@@ -110,8 +110,8 @@ These are simulated links, not physical cables.
 
 | Hostname | Local port | Remote port | Remote device |
 |---|---|---|---|
-| WekaNode01 | eth1 | swp1s0 | SN5600-1 |
-| WekaNode02 | eth1 | swp1s1 | SN5600-1 |
+| WekaNode01 | eth1 | swp10 | SN5600-1 |
+| WekaNode02 | eth1 | swp11 | SN5600-1 |
 | WekaNode03 | eth1 | swp2 | SN5600-1 |
 | WekaNode04 | eth1 | swp3 | SN5600-1 |
 | WekaNode05 | eth1 | swp4 | SN5600-1 |
