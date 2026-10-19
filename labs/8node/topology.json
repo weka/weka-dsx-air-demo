@@ -464,11 +464,8 @@
                     "node": "SN5600-1",
                     "mac": "48:B0:2D:30:00:20"
                 },
-                {
-                    "interface": "eth1",
-                    "node": "WekaNode01",
-                    "mac": "48:B0:2D:30:00:40"
-                }
+                
+                "unconnected"
             ],
             [
                 {
@@ -476,11 +473,7 @@
                     "node": "SN5600-1",
                     "mac": "48:B0:2D:30:00:21"
                 },
-                {
-                    "interface": "eth1",
-                    "node": "WekaNode02",
-                    "mac": "48:B0:2D:30:00:41"
-                }
+                "unconnected"
             ],
             [
                 {
@@ -524,7 +517,11 @@
                     "node": "SN5600-1",
                     "mac": "48:B0:2D:30:00:AA"
                 },
-                "unconnected"
+                {
+                    "interface": "eth1",
+                    "node": "WekaNode01",
+                    "mac": "48:B0:2D:30:00:40"
+                }   
             ],
             [
                 {
@@ -532,7 +529,11 @@
                     "node": "SN5600-1",
                     "mac": "48:B0:2D:30:00:AB"
                 },
-                "unconnected"
+                {
+                    "interface": "eth1",
+                    "node": "WekaNode02",
+                    "mac": "48:B0:2D:30:00:41"
+                }
             ],
             [
                 {
