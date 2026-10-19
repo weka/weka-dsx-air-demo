@@ -5,7 +5,7 @@
         "nodes": {
             "Client01": {
                 "cpu": 4,
-                "memory": 9000,
+                "memory": 9216,
                 "storage": 20,
                 "positioning": {
                     "x": 1650,
@@ -36,7 +36,7 @@
             },
             "Client02": {
                 "cpu": 4,
-                "memory": 9000,
+                "memory": 9216,
                 "storage": 20,
                 "positioning": {
                     "x": 1650,
