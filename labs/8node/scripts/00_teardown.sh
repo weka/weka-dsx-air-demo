@@ -13,9 +13,9 @@ mkdir -p "$logdir"
 exec > >(tee "$logdir/reset.log") 2>&1
 trap 'echo "Reset stopped at line $LINENO. Retain logs; do not take a checkpoint of a partial reset."' ERR
 echo 'DSX Air disposable lab reset: eight backends and two clients.'
-echo 'Target: management IPs 192.168.200.11-18,21-22 in this simulation.'
+echo 'Target: management IPs 192.168.200.11-20 in this simulation.'
 echo 'No cluster UUID or cluster login required. --apply deletes cluster data.'
-for n in 11 12 13 14 15 16 17 18 21 22; do
+for n in 11 12 13 14 15 16 17 18 19 20; do
   remote "$n" "sudo -n bash -s -- $n" <<'REMOTE'
 set -euo pipefail
 n="$1"
@@ -40,7 +40,7 @@ if [[ $mode == --plan ]]; then
   exit 0
 fi
 # Unmount first; abort on a busy mount. No forced or lazy unmount.
-for n in 21 22; do
+for n in 19 20; do
   remote "$n" 'sudo -n bash -s' <<'REMOTE'
 set -euo pipefail
 if mountpoint -q /mnt/weka; then
@@ -56,7 +56,7 @@ REMOTE
 done
 # Stop all containers BEFORE removing any backend state or touching disks.
 pids=()
-for n in 11 12 13 14 15 16 17 18 21 22; do
+for n in 11 12 13  15 16 17 18 19 20; do
   remote "$n" 'sudo -n bash -s' <<'REMOTE' &
 set -euo pipefail
 for c in default client; do
@@ -72,7 +72,7 @@ done
 failed=0
 for pid in "${pids[@]}"; do if ! wait "$pid"; then failed=1; fi; done
 [[ $failed == 0 ]] || { echo 'A container failed to stop. No disks zeroed.'; exit 1; }
-for n in 11 12 13 14 15 16 17 18 21 22; do
+for n in 11 12 13  15 16 17 18 19 20; do
   remote "$n" 'sudo -n bash -s' <<'REMOTE'
 set -euo pipefail
 for c in default client; do
