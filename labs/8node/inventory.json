@@ -4,7 +4,7 @@
     {
       "name": "Client01",
       "role": "client",
-      "management_ip": "192.168.200.21",
+      "management_ip": "192.168.200.19",
       "data_ip": "10.200.100.21",
       "interface": "eth1",
       "mtu": 9000,
@@ -13,7 +13,7 @@
     {
       "name": "Client02",
       "role": "client",
-      "management_ip": "192.168.200.22",
+      "management_ip": "192.168.200.20",
       "data_ip": "10.200.100.22",
       "interface": "eth1",
       "mtu": 9000,
