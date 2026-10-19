@@ -35,7 +35,7 @@ command -v python3 >/dev/null
 remote() { local n="$1"; shift; ssh "${SSH_OPTS[@]}" "ubuntu@192.168.200.$n" "$@"; }
 
 echo '=== Preflight ALL hosts before making changes ==='
-for n in 11 12 13 14 15 16 17 18 21 22; do
+for n in 11 12 13 14 15 16 17 18 19 20; do
   remote "$n" "sudo -n bash -s -- $n" <<'REMOTE'
 set -euo pipefail
 n="$1"
@@ -80,7 +80,7 @@ if (( n <= 18 )); then
 fi
 REMOTE
 done
-for ip in "${BACKEND_IPS[@]:1}" 10.200.100.21 10.200.100.22; do
+for ip in "${BACKEND_IPS[@]:1}" 10.200.100.19 10.200.100.20; do
   ping -I eth1 -c 1 -W 3 -M do -s 8972 "$ip"
 done
 
