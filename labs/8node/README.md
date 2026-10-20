@@ -99,8 +99,8 @@ Ubuntu hosts use the default routing table for both interfaces. The Cumulus swit
 | WekaNode06 | 192.168.200.16/24 | 10.200.100.16/24 | 100 | 9000 |
 | WekaNode07 | 192.168.200.17/24 | 10.200.100.17/24 | 100 | 9000 |
 | WekaNode08 | 192.168.200.18/24 | 10.200.100.18/24 | 100 | 9000 |
-| Client01 | 192.168.200.21/24 | 10.200.100.19/24 | 100 | 9000 |
-| Client02 | 192.168.200.22/24 | 10.200.100.20/24 | 100 | 9000 |
+| Client01 | 192.168.200.19/24 | 10.200.100.19/24 | 100 | 9000 |
+| Client02 | 192.168.200.20/24 | 10.200.100.20/24 | 100 | 9000 |
 | SN5600-1 | 192.168.200.3/24 | L2 switching; no host data IP | 100 | 9000 on host data ports |
 | oob-mgmt-server | Assigned by Air; inspect its node panel | Not attached to storage VLAN | — | — |
 
@@ -140,7 +140,7 @@ Double-click `WekaNode01` in the topology to open its console. Log in as `ubuntu
 | Device | Username/Password | Authentication | Management address |
 |---|---|---|---|
 | WekaNode01–08 | ubuntu | Console default `nvidia` if unchanged; current owner credential otherwise | 192.168.200.11–18 |
-| Client01–02 | ubuntu | Console default `nvidia` if unchanged; current owner credential otherwise | 192.168.200.21–22 |
+| Client01–02 | ubuntu | Console default `nvidia` if unchanged; current owner credential otherwise | 192.168.200.19–20 |
 | oob-mgmt-server | ubuntu | Console password `WekaDsx@123`; external SSH uses an authorized SSH key | Assigned by Air |
 | SN5600-1 | cumulus | Switch password `Weka.io123` | 192.168.200.3 |
 | WEKA GUI/CLI | admin | `Weka.io123` after cluster creation; separate from Ubuntu login | Air service `weka-gui` |
@@ -204,7 +204,7 @@ Expected results: hostname `WekaNode01`, active WEKA version `5.1.34`, empty con
 Validation of access to all hosts:
 
 ```bash
-ubuntu@WekaNode01:~$ PDSH_RCMD_TYPE=ssh pdsh -l ubuntu -w '192.168.200.[11-18],192.168.200.[21-22]' 'hostname; sudo -n true; cat /sys/class/net/eth1/mtu'
+ubuntu@WekaNode01:~$ PDSH_RCMD_TYPE=ssh pdsh -l ubuntu -w '192.168.200.[11-18],192.168.200.[19-20]' 'hostname; sudo -n true; cat /sys/class/net/eth1/mtu'
 ```
 
 All ten hostnames should appear without SSH or sudo errors, and each MTU should be `9000`. Do not start a fresh build if a cluster already exists or disk numbering/signatures differ from the script's assumptions.
@@ -220,7 +220,7 @@ All ten hostnames should appear without SSH or sudo errors, and each MTU should 
 **Expected wait time:** Roughly 20–40 seconds for the sequential ping checks, longer if addresses time out.
 
 ```bash
-ubuntu@WekaNode01:~$ for n in 12 13 14 15 16 17 18 21 22; do ping -I eth1 -c 2 -W 3 -M do -s 8972 "10.200.100.$n" || break; done
+ubuntu@WekaNode01:~$ for n in 12 13 14 15 16 17 18 19 20; do ping -I eth1 -c 2 -W 3 -M do -s 8972 "10.200.100.$n" || break; done
 ```
 
 Expected: replies from all nine targets, with zero packet loss. The `8972`-byte payload plus IPv4/ICMP headers tests the 9000-byte path.
@@ -283,7 +283,7 @@ If the build stops, preserve its `weka-8node-build-*` log and inspect the failed
 
 ```bash
 ubuntu@WekaNode01:~$ bash ~/02_mount_clients.sh
-ubuntu@WekaNode01:~$ PDSH_RCMD_TYPE=ssh pdsh -l ubuntu -w '192.168.200.[21-22]' 'hostname; findmnt --mountpoint /mnt/weka; df -h /mnt/weka'
+ubuntu@WekaNode01:~$ PDSH_RCMD_TYPE=ssh pdsh -l ubuntu -w '192.168.200.[19-20]' 'hostname; findmnt --mountpoint /mnt/weka; df -h /mnt/weka'
 ```
 
 Expected: both clients show filesystem type `wekafs`, source `10.200.100.11/default`, mounted at `/mnt/weka`, with approximately 80 GiB capacity. The scripts use `net=udp,num_cores=0` and each client's own data IP.
@@ -291,8 +291,8 @@ Expected: both clients show filesystem type `wekafs`, source `10.200.100.11/defa
 Write a demo file from Client01, then read it from Client02:
 
 ```bash
-ubuntu@WekaNode01:~$ ssh ubuntu@192.168.200.21 'mountpoint -q /mnt/weka && test "$(findmnt -n -o FSTYPE --mountpoint /mnt/weka)" = wekafs && printf "WEKA shared filesystem in DSX Air\n" > /mnt/weka/air-demo.txt && sha256sum /mnt/weka/air-demo.txt'
-ubuntu@WekaNode01:~$ ssh ubuntu@192.168.200.22 'mountpoint -q /mnt/weka && test "$(findmnt -n -o FSTYPE --mountpoint /mnt/weka)" = wekafs && cat /mnt/weka/air-demo.txt && sha256sum /mnt/weka/air-demo.txt'
+ubuntu@WekaNode01:~$ ssh ubuntu@192.168.200.19 'mountpoint -q /mnt/weka && test "$(findmnt -n -o FSTYPE --mountpoint /mnt/weka)" = wekafs && printf "WEKA shared filesystem in DSX Air\n" > /mnt/weka/air-demo.txt && sha256sum /mnt/weka/air-demo.txt'
+ubuntu@WekaNode01:~$ ssh ubuntu@192.168.200.20 'mountpoint -q /mnt/weka && test "$(findmnt -n -o FSTYPE --mountpoint /mnt/weka)" = wekafs && cat /mnt/weka/air-demo.txt && sha256sum /mnt/weka/air-demo.txt'
 ```
 
 Expected: Client02 prints the text written by Client01, and both SHA256 values match. The demo file is overwritten on each run; use a different filename if preserving a previous demonstration. Mounts are session mounts; the script does not create a persistent fstab entry.
@@ -403,7 +403,7 @@ Validation: require eight disk `PASS` messages and `RESET COMPLETE`. If reset st
 Before stopping the simulation, inspect the empty local container lists:
 
 ```bash
-ubuntu@WekaNode01:~$ PDSH_RCMD_TYPE=ssh pdsh -l ubuntu -w '192.168.200.[11-18],192.168.200.[21-22]' 'hostname; sudo -n weka local ps'
+ubuntu@WekaNode01:~$ PDSH_RCMD_TYPE=ssh pdsh -l ubuntu -w '192.168.200.[11-18],192.168.200.[19-20]' 'hostname; sudo -n weka local ps'
 ```
 
 In Air, stop the simulation with checkpoint saving enabled and wait for saving to finish. Open **Checkpoints** and identify the newly saved clean checkpoint. Record it as `WEKA-5.1.34-8Backend-Clean-Ready` in the demo name/description or checkpoint label if the UI supports labeling. Preserve it as a favorite when appropriate. Do this before building another cluster.
@@ -479,7 +479,7 @@ Inspect current alerts and client memory:
 
 ```bash
 ubuntu@WekaNode01:~$ weka alerts
-ubuntu@WekaNode01:~$ PDSH_RCMD_TYPE=ssh pdsh -l ubuntu -w '192.168.200.[21-22]' 'hostname; free -h'
+ubuntu@WekaNode01:~$ PDSH_RCMD_TYPE=ssh pdsh -l ubuntu -w '192.168.200.[19-20]' 'hostname; free -h'
 ```
 
 Eight-GiB clients previously showed low available-memory alerts. Increasing client memory is an optional topology change and consumes more Air quota. Obtain an appropriate WEKA license through the owner; do not interpret a missing license as a validated production deployment.
