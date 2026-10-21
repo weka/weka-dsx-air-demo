@@ -8,7 +8,14 @@ run="$(date -u +%Y%m%dT%H%M%SZ)-$$"
 logs="$HOME/weka-fio-$run"; mkdir -p "$logs"
 exec > >(tee "$logs/fio.log") 2>&1
 folder="/mnt/weka/fio-verify-$run"
-for n in 11 19 20; do
+hostname
+if ! command -v fio >/dev/null; then
+  apt-get update
+  DEBIAN_FRONTEND=noninteractive apt-get install -y fio
+fi
+fio --version
+fio --version
+for n in 19 20; do
   ssh "${opts[@]}" "ubuntu@192.168.200.$n" 'sudo -n bash -s' <<'REMOTE'
 set -euo pipefail
 [[ $(findmnt -n -o FSTYPE -T /mnt/weka) == wekafs ]]
