@@ -14,7 +14,6 @@ if ! command -v fio >/dev/null; then
   DEBIAN_FRONTEND=noninteractive apt-get install -y fio
 fi
 fio --version
-fio --version
 for n in 19 20; do
   ssh "${opts[@]}" "ubuntu@192.168.200.$n" 'sudo -n bash -s' <<'REMOTE'
 set -euo pipefail
