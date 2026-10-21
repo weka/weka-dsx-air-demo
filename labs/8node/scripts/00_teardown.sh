@@ -38,7 +38,7 @@ REMOTE
 done
 # Stop all containers BEFORE removing any backend state or touching disks.
 pids=()
-for n in 11 12 13  15 16 17 18 19 20; do
+for n in 11 12 13 14 15 16 17 18 19 20; do
   remote "$n" 'sudo -n bash -s' <<'REMOTE' &
 set -euo pipefail
 for c in default client; do
