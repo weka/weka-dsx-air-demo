@@ -124,7 +124,7 @@ size=$(blockdev --getsize64 "$dev")
 (( size > 40000000000 && size < 60000000000 ))
 echo "ZEROING $expected $dev $size bytes"
 if ! blkdiscard --zeroout "$dev"; then
-  dd if=/dev/zero of="$dev" bs=4M count="$size" iflag=count_bytes conv=fsync status=progress
+  wipefs -a "$dev"
 fi
 sync
 blockdev --rereadpt "$dev"
