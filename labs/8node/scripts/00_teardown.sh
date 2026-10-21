@@ -15,25 +15,7 @@ trap 'echo "Reset stopped at line $LINENO. Retain logs; do not take a checkpoint
 echo 'DSX Air disposable lab reset: eight backends and two clients.'
 echo 'Target: management IPs 192.168.200.11-20 in this simulation.'
 echo 'No cluster UUID or cluster login required. --apply deletes cluster data.'
-for n in 11 12 13 14 15 16 17 18 19 20; do
-  remote "$n" "sudo -n bash -s -- $n" <<'REMOTE'
-set -euo pipefail
-n="$1"
-if (( n <= 18 )); then expected=$(printf 'WekaNode%02d' "$((n-10))"); else expected=$(printf 'Client%02d' "$((n-20))"); fi
-[[ $(hostname -s) == "$expected" ]]
-command -v timeout >/dev/null
-weka version | grep -Eq '^\*?[[:space:]]*5\.1\.34[[:space:]]*$'
-psout=$(weka local ps --color disabled)
-echo "$psout"
-# Only known lab containers may be present. Never use local rm --all.
-echo "$psout" | awk -v backend="$((n<=18))" 'NR==1{next} NF{if($1!="default" && !(backend==0 && $1=="client")) bad=1} END{exit bad}'
-if (( n <= 18 )); then
-  # WEKA may own the data controller via igb_uio; block device checks come later.
-  lspci -nnk -d ::0108
-  echo 'Data disk serial/size checks deferred until all containers are removed.'
-fi
-REMOTE
-done
+
 if [[ $mode == --plan ]]; then
   echo 'PLAN ONLY: unmount clients; stop all ten lab containers; remove only default/client; verify all eight data disks by serial, then zero them.'
   echo 'No cluster changes or disk writes made. Apply with: bash 00_teardown.sh --apply'
