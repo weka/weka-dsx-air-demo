@@ -54,7 +54,7 @@ done
 failed=0
 for pid in "${pids[@]}"; do if ! wait "$pid"; then failed=1; fi; done
 [[ $failed == 0 ]] || { echo 'A container failed to stop. No disks zeroed.'; exit 1; }
-for n in 11 12 13  15 16 17 18 19 20; do
+for n in 11 12 13 14 15 16 17 18 19 20; do
   remote "$n" 'sudo -n bash -s' <<'REMOTE'
 set -euo pipefail
 for c in default client; do
