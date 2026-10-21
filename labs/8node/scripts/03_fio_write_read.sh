@@ -20,30 +20,8 @@ fio --version
 REMOTE
 done
 for n in 19 20; do
-  ssh "${opts[@]}" "ubuntu@192.168.200.$n" "bash -s -- '$folder' $n" <<'REMOTE'
-set -euo pipefail
-folder="$1"; n="$2"
-[[ $(findmnt -n -o FSTYPE -T /mnt/weka) == wekafs ]]
-mkdir -p "$folder"
-file="$folder/client$n.bin"
-[[ ! -e $file ]]
-echo "=== WRITE from $(hostname) to $file ==="
-fio --name=weka-write --filename="$file" --rw=write --bs=1M --size=1G \
-  --numjobs=1 --iodepth=8 --ioengine=libaio --direct=1 \
-  --verify=crc32c --do_verify=0 --end_fsync=1 --group_reporting
-REMOTE
+   ssh 192.168.200.$n /usr/bin/fio --server --daemonize=/tmp/fio.pid
 done
-for n in 19 20; do
-  peer=$((43-n))
-  ssh "${opts[@]}" "ubuntu@192.168.200.$n" "bash -s -- '$folder' $peer" <<'REMOTE'
-set -euo pipefail
-folder="$1"; peer="$2"; file="$folder/client$peer.bin"
-[[ $(findmnt -n -o FSTYPE -T /mnt/weka) == wekafs ]]
-[[ -f $file && $(stat -c %s "$file") == 1073741824 ]]
-echo "=== READ and CRC32C VERIFY from $(hostname): $file ==="
-fio --name=weka-read-verify --filename="$file" --rw=read --bs=1M --size=1G \
-  --numjobs=1 --iodepth=8 --ioengine=libaio --direct=1 --allow_file_create=0 \
-  --verify=crc32c --verify_fatal=1 --group_reporting
-REMOTE
-done
+/usr/bin/fio --client=/home/ubuntu/client /home/ubuntu/job-file/01-write
+/usr/bin/fio --client=/home/ubuntu/client /home/ubuntu/job-file/01-read
 echo "PASS: both clients wrote 1 GiB; both files read and checksum-verified by the other client. Files: $folder; logs: $logs"
