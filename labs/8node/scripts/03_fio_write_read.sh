@@ -22,6 +22,6 @@ done
 for n in 19 20; do
    ssh 192.168.200.$n /usr/bin/fio --server --daemonize=/tmp/fio.pid
 done
-/usr/bin/fio --client=/home/ubuntu/client /home/ubuntu/job-file/01-write
-/usr/bin/fio --client=/home/ubuntu/client /home/ubuntu/job-file/01-read
+/usr/bin/fio --client=/home/ubuntu/jobfiles/client /home/ubuntu/jobfiles/01-write
+/usr/bin/fio --client=/home/ubuntu/jobfiles/client /home/ubuntu/jobfiles/01-read
 echo "PASS: both clients wrote 1 GiB; both files read and checksum-verified by the other client. Files: $folder; logs: $logs"
