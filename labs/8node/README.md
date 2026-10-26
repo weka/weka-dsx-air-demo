@@ -89,19 +89,19 @@ The explicit backend/client allocation totals 56 vCPUs and 208 GiB RAM, before t
 
 Ubuntu hosts use the default routing table for both interfaces. The Cumulus switch's `eth0` is in its management VRF. VLAN `100` is the switch access VLAN for untagged host `eth1` traffic; the host configuration does not require an `eth1.100` subinterface.
 
-| Hostname | Management eth0 | Data eth1 | Data VLAN | Data MTU |
-|---|---|---|---|---|
-| WekaNode01 | 192.168.200.11/24 | 10.200.100.11/24 | 100 | 9000 |
-| WekaNode02 | 192.168.200.12/24 | 10.200.100.12/24 | 100 | 9000 |
-| WekaNode03 | 192.168.200.13/24 | 10.200.100.13/24 | 100 | 9000 |
-| WekaNode04 | 192.168.200.14/24 | 10.200.100.14/24 | 100 | 9000 |
-| WekaNode05 | 192.168.200.15/24 | 10.200.100.15/24 | 100 | 9000 |
-| WekaNode06 | 192.168.200.16/24 | 10.200.100.16/24 | 100 | 9000 |
-| WekaNode07 | 192.168.200.17/24 | 10.200.100.17/24 | 100 | 9000 |
-| WekaNode08 | 192.168.200.18/24 | 10.200.100.18/24 | 100 | 9000 |
-| Client01 | 192.168.200.19/24 | 10.200.100.19/24 | 100 | 9000 |
-| Client02 | 192.168.200.20/24 | 10.200.100.20/24 | 100 | 9000 |
-| SN5600-1 | 192.168.200.3/24 | L2 switching; no host data IP | 100 | 9000 on host data ports |
+| Hostname | Management eth0 | Data eth1 | Data VLAN | Data MTU | Username | Password |
+|---|---|---|---|---|---|---|
+| WekaNode01 | 192.168.200.11/24 | 10.200.100.11/24 | 100 | 9000 | ubuntu | nvidia |
+| WekaNode02 | 192.168.200.12/24 | 10.200.100.12/24 | 100 | 9000 | ubuntu | nvidia |
+| WekaNode03 | 192.168.200.13/24 | 10.200.100.13/24 | 100 | 9000 | ubuntu | nvidia |
+| WekaNode04 | 192.168.200.14/24 | 10.200.100.14/24 | 100 | 9000 | ubuntu | nvidia |
+| WekaNode05 | 192.168.200.15/24 | 10.200.100.15/24 | 100 | 9000 | ubuntu | nvidia |
+| WekaNode06 | 192.168.200.16/24 | 10.200.100.16/24 | 100 | 9000 | ubuntu | nvidia |
+| WekaNode07 | 192.168.200.17/24 | 10.200.100.17/24 | 100 | 9000 | ubuntu | nvidia |
+| WekaNode08 | 192.168.200.18/24 | 10.200.100.18/24 | 100 | 9000 | ubuntu | nvidia |
+| Client01 | 192.168.200.19/24 | 10.200.100.19/24 | 100 | 9000 | ubuntu | nvidia |
+| Client02 | 192.168.200.20/24 | 10.200.100.20/24 | 100 | 9000 | ubuntu | nvidia |
+| SN5600-1 | 192.168.200.3/24 | L2 switching; no host data IP | 100 | 9000 on host data ports | cumulus | Weka.io123
 | oob-mgmt-server | Assigned by Air; inspect its node panel | Not attached to storage VLAN | — | — |
 
 ### Physical Connectivity
@@ -159,7 +159,7 @@ ubuntu@WekaNode01:~$ hostname
 WekaNode01
 ```
 
-To inspect the switch, use account `cumulus` and its current owner-supplied password:
+To inspect the switch, use account `cumulus` and its password is Weka.io123:
 
 ```bash
 ubuntu@oob-mgmt-server:~$ ssh cumulus@192.168.200.3
@@ -254,6 +254,12 @@ The script checks all hosts, prepares swap, creates three-core/4 GiB UDP backend
 
 Validation:
 
+Authenticate at the command line, log in as WEKA user `admin` with password `Weka.io123` after the creation script has changed it, or the overridden password, then repeat the read-only checks:
+
+```bash
+ubuntu@WekaNode01:~$ weka user login
+```
+
 ```bash
 ubuntu@WekaNode01:~$ weka status
 ubuntu@WekaNode01:~$ weka cluster container
@@ -262,12 +268,6 @@ ubuntu@WekaNode01:~$ weka fs
 ```
 
 Expected: cluster `WekaDSXAirDemo8Node`, eight backend containers and eight drives UP, protection fully protected, I/O STARTED, and filesystem `default` in `group1`. Before mounting, zero connected clients is normal. Each new cluster receives a new UUID.
-
-If authentication is required, log in as WEKA user `admin` with password `Weka.io123` after the creation script has changed it, or the overridden password, then repeat the read-only checks:
-
-```bash
-ubuntu@WekaNode01:~$ weka user login
-```
 
 If the build stops, preserve its `weka-8node-build-*` log and inspect the failed phase. Do not blindly rerun a partially completed creation script.
 
@@ -305,7 +305,7 @@ Expected: Client02 prints the text written by Client01, and both SHA256 values m
 
 **Credentials for this step:** Account `ubuntu`, console password `nvidia` if unchanged or owner credential; key-based SSH and passwordless sudo to the client `ubuntu` accounts.
 
-**Expected wait time:** Several minutes for four sequential jobs; duration depends on actual throughput. If fio is absent, package installation adds time. This is a fixed-size test, not a fixed 30-second run.
+**Expected wait time:** Several minutes for four sequential jobs; duration depends on actual throughput.
 
 ```bash
 ubuntu@WekaNode01:~$ time bash ~/03_fio_write_read.sh
@@ -501,6 +501,8 @@ Partner resources are named without live external links to follow this Air guide
 ## Contact Info
 
 | Contact type | Contact details |
+| Person | bob@weka.io |
+| email alias | partners@weka.io |
 |---|---|
 | WEKA lab handoff | Bob and the WEKA technical alliances team; request the current lab owner through your WEKA contact |
 | Scripts and lab documentation | WEKA-owned repository named above; access provided by the repository owner |
