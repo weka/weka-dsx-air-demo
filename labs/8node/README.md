@@ -504,9 +504,5 @@ Partner resources are named without live external links to follow this Air guide
 | Person | bob@weka.io |
 | email alias | partners@weka.io |
 |---|---|
-| WEKA lab handoff | Bob and the WEKA technical alliances team; request the current lab owner through your WEKA contact |
-| Scripts and lab documentation | WEKA-owned repository named above; access provided by the repository owner |
-| NVIDIA DSX Air validation | David Zenone and the NVIDIA DSX Air TME team through the existing project thread |
-| Air account/resource access | Your organization's Air administrator |
 
 When requesting help, include the simulation name, selected checkpoint, failed step, timestamped logs, and read-only status/alert output. Exclude passwords, private keys, tokens, and license secrets.
