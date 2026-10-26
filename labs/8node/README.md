@@ -4,11 +4,7 @@
 
 This lab demonstrates how to create and use a WEKA distributed filesystem in NVIDIA DSX Air. WEKA provides shared storage that multiple application clients can access through a common filesystem. In this lab, eight simulated backend servers provide storage to two Ubuntu clients over an Ethernet data network.
 
-You will create the cluster and filesystem, mount both clients, write and read shared data, run fio checksum verification, and inspect the cluster through the WEKA GUI. You will also learn how to reset the storage and preserve a clean starting point using an Air checkpoint.
-
-**Starting state:** The clean checkpoint contains installed WEKA 5.1.34 software, prepared networking, SSH access, and lab scripts. The WEKA cluster and filesystem are created during the lab. Importing the topology JSON alone does not install software or prepare this configuration.
-
-**Important:** Use the clean checkpoint selected by the lab publisher. The reset step permanently deletes the lab cluster's filesystem data. Simulated throughput is not a production benchmark. This lab uses UDP over L2 VLAN 100; it does not demonstrate RDMA or an L3 fabric. Software licensing and any credentials changed from those documented below must be supplied by the lab owner.
+You will create the cluster and filesystem, mount both clients, write and read shared data, run fio checksum verification, and inspect the cluster through the WEKA GUI. You will also learn how to reset the storage and preserve a pre-clusterized state of the hosts to allow for the demo user to experience the whole process.
 
 ## Table of Contents
 
