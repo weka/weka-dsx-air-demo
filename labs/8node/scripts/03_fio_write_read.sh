@@ -11,6 +11,7 @@ folder="/mnt/weka/fio-verify-$run"
 hostname
 if ! command -v fio >/dev/null; then
   sudo apt-get update
+  sleep 30
   DEBIAN_FRONTEND=noninteractive sudo apt-get install -y fio
 fi
 fio --version
@@ -19,8 +20,9 @@ for n in 19 20; do
 set -euo pipefail
 [[ $(findmnt -n -o FSTYPE -T /mnt/weka) == wekafs ]]
 if ! command -v fio >/dev/null; then
-  sudo apt-get update
-  DEBIAN_FRONTEND=noninteractive sudo apt-get install -y fio
+  apt-get update
+  sleep 30
+  DEBIAN_FRONTEND=noninteractive apt-get install -y fio
 fi
 fio --version
 REMOTE
