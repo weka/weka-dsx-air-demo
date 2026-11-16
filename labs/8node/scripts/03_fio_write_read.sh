@@ -10,9 +10,9 @@ exec > >(tee "$logs/fio.log") 2>&1
 folder="/mnt/weka/fio-verify-$run"
 hostname
 if ! command -v fio >/dev/null; then
-  sudo apt-get update
+  apt-get update
   sleep 30
-  DEBIAN_FRONTEND=noninteractive sudo apt-get install -y fio
+  DEBIAN_FRONTEND=noninteractive apt-get install -y fio
 fi
 fio --version
 for n in 19 20; do
