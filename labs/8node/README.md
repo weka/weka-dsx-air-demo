@@ -137,11 +137,11 @@ Double-click `WekaNode01` in the topology to open its console. Log in as `ubuntu
 |---|---|---|---|
 | WekaNode01–08 | ubuntu | Console default `nvidia` if unchanged; current owner credential otherwise | 192.168.200.11–18 |
 | Client01–02 | ubuntu | Console default `nvidia` if unchanged; current owner credential otherwise | 192.168.200.19–20 |
-| oob-mgmt-server | ubuntu | Console password `WekaDsx@123`; external SSH uses an authorized SSH key | Assigned by Air |
+| oob-mgmt-server | ubuntu | Console password `Weka.io123`; external SSH uses an authorized SSH key | Assigned by Air |
 | SN5600-1 | cumulus | Switch password `Weka.io123` | 192.168.200.3 |
 | WEKA GUI/CLI | admin | `Weka.io123` after cluster creation; separate from Ubuntu login | Air service `weka-gui` |
 
-Do not assume an image's original switch or WEKA password remains valid. Scripts use `ubuntu` SSH keys and passwordless sudo from Node01. The creation script changes the fresh cluster's default `admin` password to the lab password `Weka.io123`, then authenticates both root and ubuntu CLI profiles. It contains no installer token. The OOB console password is `WekaDsx@123`; this is separate from WEKA authentication.
+Do not assume an image's original switch or WEKA password remains valid. Scripts use `ubuntu` SSH keys and passwordless sudo from Node01. The creation script changes the fresh cluster's default `admin` password to the lab password `Weka.io123`, then authenticates both root and ubuntu CLI profiles. It contains no installer token. The OOB console password is `Weka.io123`; this is separate from WEKA authentication.
 
 ### SSH Access
 
